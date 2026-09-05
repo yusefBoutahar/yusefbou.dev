@@ -23,27 +23,29 @@ const links = [
 ];
 
 /* ---------------------------------------------------------------------------
-   CONMUTADOR DE TEMA — un solo botón que cicla tres estados.
+   CONMUTADOR DE TEMA — dos estados, claro y oscuro. Un solo botón que
+   alterna entre los dos con el icono del ESTADO ACTUAL.
 
-   Antes vivía en el pie como grupo de tres radios con las etiquetas escritas.
-   Aquí es un botón con icono, y eso obliga a devolver por otras vías las dos
-   cosas que el texto daba gratis:
+   Antes del primer clic no hay elección explícita: el icono sigue lo que
+   pida `prefers-color-scheme` (mismo criterio que ya usa `light-dark()` en
+   global.css para pintar la página), resuelto por CSS puro para que el icono
+   correcto salga en el primer fotograma sin JavaScript. En cuanto se pulsa,
+   la elección queda fija en `localStorage` y ya no vuelve a seguir al
+   sistema: es un interruptor de dos posiciones, no un ciclo con «según el
+   sistema» como tercer estado.
+
      · qué estado está activo  -> lo dice el `aria-label`, que empieza por
-       «Tema: Sistema» y se reescribe en cada pulsación;
+       «Tema: Claro» u «Oscuro»;
      · qué va a pasar al pulsar -> segunda mitad del mismo `aria-label`
-       («Cambiar a claro»), porque un icono de sol no promete nada por sí solo;
+       («Cambiar a oscuro»), porque un icono de sol no promete nada por sí solo;
      · que ALGO ha cambiado     -> región `aria-live="polite"` solo para
        lectores, que se rellena únicamente tras una pulsación del usuario.
-
-   Los tres estados se conservan: quitar «Sistema» obligaría a elegir tema a
-   quien ya lo tiene elegido en su sistema operativo.
    -------------------------------------------------------------------------- */
 
-const THEME_CYCLE = ['system', 'light', 'dark'] as const;
+const THEME_CYCLE = ['light', 'dark'] as const;
 type ThemeChoice = (typeof THEME_CYCLE)[number];
 
 const themeName = {
-  system: ui.themeSystem,
   light: ui.themeLight,
   dark: ui.themeDark,
 } as const satisfies Record<ThemeChoice, string>;
@@ -51,7 +53,6 @@ const themeName = {
 // El icono es el ESTADO ACTUAL, no la acción: es lo que espera quien ya ha
 // usado otro conmutador de tema, y lo que permite leer el estado de un vistazo.
 const themeIcon = {
-  system: 'monitor',
   light: 'sun',
   dark: 'moon',
 } as const satisfies Record<ThemeChoice, IconName>;
@@ -121,7 +122,7 @@ const themeCopy = Object.fromEntries(
         type="button"
         class="btn btn-ghost theme-toggle"
         data-theme-toggle
-        aria-label={themeCopy['data-aria-system']}
+        aria-label={themeCopy['data-aria-light']}
         {...themeCopy}
       >
         {
@@ -167,10 +168,24 @@ const themeCopy = Object.fromEntries(
   .theme-ico {
     display: none;
   }
-  :global(html:not([data-theme])) .theme-ico[data-theme-icon='system'],
   :global(html[data-theme='light']) .theme-ico[data-theme-icon='light'],
   :global(html[data-theme='dark']) .theme-ico[data-theme-icon='dark'] {
     display: inline-flex;
+  }
+  /* Sin elección explícita todavía: el icono sigue `prefers-color-scheme`,
+     el mismo criterio que ya resuelve el color real de la página. Sol por
+     defecto (sistema claro o sin preferencia declarada), luna si el sistema
+     pide oscuro. */
+  :global(html:not([data-theme])) .theme-ico[data-theme-icon='light'] {
+    display: inline-flex;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(html:not([data-theme])) .theme-ico[data-theme-icon='light'] {
+      display: none;
+    }
+    :global(html:not([data-theme])) .theme-ico[data-theme-icon='dark'] {
+      display: inline-flex;
+    }
   }
 
   /* SIN JAVASCRIPT el botón no puede hacer nada, así que no se dibuja: un
@@ -246,8 +261,8 @@ const themeCopy = Object.fromEntries(
   // Este script NO decide el tema inicial: eso ya lo hace el script en línea
   // del Layout antes de pintar. Aquí solo se lee el mismo `localStorage` para
   // saber en qué punto del ciclo estamos y poner el nombre accesible correcto.
-  type ThemeChoice = 'system' | 'light' | 'dark';
-  const CYCLE: ThemeChoice[] = ['system', 'light', 'dark'];
+  type ThemeChoice = 'light' | 'dark';
+  const CYCLE: ThemeChoice[] = ['light', 'dark'];
 
   const root = document.documentElement;
   const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
@@ -256,32 +271,30 @@ const themeCopy = Object.fromEntries(
   if (toggle) {
     // Toda la microcopia viene del servidor, ya traducida.
     const ARIA: Record<ThemeChoice, string> = {
-      system: toggle.dataset.ariaSystem ?? '',
       light: toggle.dataset.ariaLight ?? '',
       dark: toggle.dataset.ariaDark ?? '',
     };
     const LIVE: Record<ThemeChoice, string> = {
-      system: toggle.dataset.liveSystem ?? '',
       light: toggle.dataset.liveLight ?? '',
       dark: toggle.dataset.liveDark ?? '',
     };
 
     const read = (): ThemeChoice => {
-      // La fuente de verdad es el atributo que ya está en <html>; localStorage
-      // solo se consulta si el atributo no está, para distinguir «sistema».
+      // La fuente de verdad es el atributo que ya está en <html>. Sin
+      // elección explícita todavía, se resuelve por la preferencia del
+      // sistema: el botón siempre muestra un estado concreto, nunca uno
+      // intermedio.
       const painted = root.dataset.theme;
       if (painted === 'light' || painted === 'dark') return painted;
-      return 'system';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     };
 
     const apply = (choice: ThemeChoice, announce: boolean) => {
       // Sin transición durante el cambio: se percibiría como retraso.
       root.classList.add('theming');
-      if (choice === 'system') delete root.dataset.theme;
-      else root.dataset.theme = choice;
+      root.dataset.theme = choice;
       try {
-        if (choice === 'system') localStorage.removeItem('theme');
-        else localStorage.setItem('theme', choice);
+        localStorage.setItem('theme', choice);
       } catch {}
       // El icono lo cambia el CSS al ver el atributo de <html>; aquí solo se
       // renueva el nombre accesible, que es lo que el CSS no puede tocar.
