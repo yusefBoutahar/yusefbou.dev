@@ -15,14 +15,14 @@ interface Props {
 
 const { lang, contact, copyLabel, copiedLabel, copyAriaLabel } = Astro.props;
 
-// El correo se escribe una vez y se reutiliza en el enlace grande, en el botón
-// secundario y en el atributo que lee el script de copiado.
+// El correo se escribe una vez y se reutiliza en la tarjeta de comando, en el
+// botón secundario y en el atributo que lee el script de copiado.
 const mailto = `mailto:${contact.email}`;
 
-// Cinco destinos en una sola fila, con el mismo reparto de jerarquía que el
-// hero (§6.1): un primario, un secundario y tres enlaces mono de marca. El CV
-// es el primario porque es la acción que un reclutador hace de verdad.
-// El canal de YouTube entra el último: es prueba, no credencial de contacto.
+// Tres perfiles como baldosas. El canal de YouTube entra el último: es prueba,
+// no credencial de contacto. La marca SUSTITUYE a la flecha ↗ —regla del sitio,
+// igual que en el hero y en el pie—: el logotipo ya dice que el destino es
+// externo y dos glifos en un enlace de una palabra son un árbol de navidad.
 const profiles: { href: string; label: string; icon: IconName }[] = [
   { href: SITE.linkedin, label: contact.linkedinLabel, icon: 'linkedin' },
   { href: SITE.github, label: contact.githubLabel, icon: 'github' },
@@ -30,36 +30,58 @@ const profiles: { href: string; label: string; icon: IconName }[] = [
 ];
 ---
 
-<section class="section" id={SECTION_IDS.contact} aria-labelledby="contact-title">
-  <div class="shell">
-    <header class="section-head" data-reveal>
-      <p class="section-kicker">
-        <span><span data-num>{SECTION_INDEX.contact}</span> · {contact.title}</span>
-      </p>
-      <h2 class="section-title" id="contact-title">{contact.title}</h2>
-      <p class="section-lead">{contact.lead}</p>
-    </header>
+<!-- 07 · Contacto. LA SEGUNDA LOSA OSCURA DEL SITIO, y la última impresión.
+     El hero abre con una placa oscura sobre el papel crema y el contacto cierra
+     con otra: la página empieza y termina en el mismo material, y en medio todo
+     es cuaderno. Aquí la losa es además el «Dark Gradient Hero Banner» —el
+     ÚNICO degradado que el sistema permite, y solo como fondo de sección—.
+     `.on-dark` redeclara la capa cruda de tokens para todo el subárbol: los
+     botones, el filete del cintillo, la tarjeta de comando y las baldosas se
+     recalculan solos, sin una sola regla duplicada y sin un hexadecimal.
+     Dos columnas a partir de 900 px: a la izquierda lo que se lee una vez —el
+     titular, la frase y la nota—; a la derecha lo que se USA —la dirección, las
+     dos acciones y los tres perfiles—. -->
+<section
+  class="section contact-band on-dark band-dark"
+  id={SECTION_IDS.contact}
+  aria-labelledby="contact-title"
+>
+  <div class="shell contact-grid">
+    <div>
+      <header class="section-head mb-8" data-reveal>
+        <p class="section-kicker">
+          <span><span data-num>{SECTION_INDEX.contact}</span> · {contact.title}</span>
+        </p>
+        <h2 class="section-title" id="contact-title">{contact.title}</h2>
+        <p class="section-lead">{contact.lead}</p>
+      </header>
 
-    <div class="max-w-prose">
-      <!-- El correo es el elemento gráfico principal de la sección: mono a
-           text-xl entre dos filetes, con el botón de copiar al lado. -->
+      <p class="max-w-[56ch] text-sm text-text-3" data-reveal data-reveal-delay="45">
+        {contact.note}
+      </p>
+    </div>
+
+    <div class="contact-panel">
+      <!-- LA DIRECCIÓN, COMO TARJETA DE COMANDO. Es la pieza gráfica de la
+           sección: `$` de indicativo, la dirección en mono y el botón de copiar
+           dentro de la misma placa. La lógica es la de siempre y no se ha
+           tocado ni una línea: el botón NACE OCULTO y solo lo destapa el script
+           si hay portapapeles, la confirmación la canta una región viva, y sin
+           JavaScript la dirección sigue siendo un `mailto:` que funciona. Lo
+           único que ha cambiado es la piel. -->
       <div
-        class="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-y border-border py-3"
+        class="contact-copy"
         data-reveal
         data-copy-root
         data-copy-email={contact.email}
         data-copy-done={copiedLabel}
       >
-        {/* La dirección se queda LIMPIA, sin sobre: es la pieza tipográfica de
-            la sección —mono a text-xl entre dos filetes— y un icono ahí solo
-            le quitaría sitio a lo único que hay que leer. El sobre va en el
-            botón «Escríbeme por correo», que es donde hay una acción. */}
-        <a class="link font-mono text-xl font-medium" href={mailto}>{contact.email}</a>
+        <span class="snippet contact-snippet">
+          {/* Indicativo de terminal: es cromo, no contenido. Un lector de
+              pantalla que lea «dólar» antes de la dirección estorba. */}
+          <span class="snippet-prompt" aria-hidden="true">$</span>
+          <a class="link contact-mail" href={mailto}>{contact.email}</a>
 
-        <span class="flex items-center gap-3">
-          <!-- Nace oculto y solo lo destapa el script si hay portapapeles: sin
-               JavaScript no aparece un control que no haría nada, y el correo
-               sigue siendo un mailto normal. -->
           {/* Los dos iconos viajan en el marcado y solo se turnan con una
               clase: miden lo mismo (16), así que el botón no cambia de ancho
               al confirmar y no hay ni un pixel de desplazamiento. El nombre
@@ -67,7 +89,7 @@ const profiles: { href: string; label: string; icon: IconName }[] = [
               anuncia el éxito es la región viva de al lado, no el icono. */}
           <button
             type="button"
-            class="hidden btn btn-ghost font-mono text-xs"
+            class="hidden btn btn-ghost contact-copy-btn font-mono text-xs"
             aria-label={copyAriaLabel}
             data-copy-button
           >
@@ -75,50 +97,170 @@ const profiles: { href: string; label: string; icon: IconName }[] = [
             <span data-copy-icon="idle"><Icon name="copy" size={16} /></span>
             <span class="hidden" data-copy-icon="done"><Icon name="check" size={16} /></span>
           </button>
-
-          <!-- Confirmación textual, sin animación y sin depender del color. -->
-          <span class="label" role="status" aria-live="polite" data-copy-status></span>
         </span>
+
+        <!-- Confirmación textual, sin animación y sin depender del color. -->
+        <span class="label" role="status" aria-live="polite" data-copy-status></span>
       </div>
 
-      {/* Misma estructura que la fila del hero, clase por clase: las dos
-          acciones en un grupo y los perfiles en otro. Con cinco destinos en
-          una sola lista, el tercer enlace se quedaba colgando al final del
-          primer renglón y los otros dos bajaban solos; agrupados, lo que se
-          parte es la fila entera y quedan dos bloques legibles. */}
-      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4" data-reveal data-reveal-delay="45">
-        <div class="flex flex-wrap gap-3">
-          <a class="btn btn-primary" href={cvPath(lang)} download>
-            {contact.cvLabel}<Icon name="download" size={16} />
-          </a>
-          <a class="btn btn-secondary" href={mailto}>
-            {contact.emailLabel}<Icon name="mail" size={16} />
-          </a>
-        </div>
+      <!-- Las dos acciones de verdad. Sobre oscuro el primario se invierte a
+           relleno claro («Filled Light CTA»), que es el mayor contraste
+           disponible ahí, y lo hace `.on-dark` sin que este fichero lo pida. -->
+      <div class="contact-actions" data-reveal data-reveal-delay="45">
+        <a class="btn btn-primary" href={cvPath(lang)} download>
+          {contact.cvLabel}<Icon name="download" size={16} />
+        </a>
+        <a class="btn btn-secondary" href={mailto}>
+          {contact.emailLabel}<Icon name="mail" size={16} />
+        </a>
+      </div>
 
-        <ul class="flex flex-wrap items-center gap-x-2" role="list">
+      <div data-reveal data-reveal-delay="90">
+        {/* El rótulo no es decoración: da nombre accesible a la lista de
+            baldosas, que si no se anuncia como «lista de tres elementos». */}
+        <p class="label" id="contact-profiles">{contact.profilesLabel}</p>
+
+        <ul class="contact-tiles" role="list" aria-labelledby="contact-profiles">
           {
             profiles.map((profile) => (
               <li>
-                <a
-                  class="btn btn-ghost font-mono text-xs"
-                  href={profile.href}
-                  target="_blank"
-                  rel="noopener"
-                >
-                  {profile.label}
-                  <Icon name={profile.icon} size={16} />
+                <a class="contact-tile" href={profile.href} target="_blank" rel="noopener">
+                  <Icon name={profile.icon} size={20} />
+                  <span>{profile.label}</span>
                 </a>
               </li>
             ))
           }
         </ul>
       </div>
-
-      <p class="mt-10 text-sm text-text-3" data-reveal data-reveal-delay="90">{contact.note}</p>
     </div>
   </div>
 </section>
+
+<style>
+  /* LA LOSA. Misma mecánica que `.hero`, clase por clase: la sección se
+     estrecha al ancho del shell, mete el gutter POR DENTRO y deja el borde de
+     la placa fuera, sobre el crema. Así el contenido cae exactamente sobre la
+     misma vertical que el de las secciones de arriba y el degradado no llega a
+     sangre. El radio (16) y el `border: 0` los pone ya `.band-dark`. */
+  .contact-band {
+    inline-size: calc(100% - var(--gutter) * 2);
+    max-inline-size: var(--container-shell);
+    margin-inline: auto;
+    margin-block: var(--gutter);
+    padding-inline: var(--gutter);
+  }
+  .contact-band > .shell {
+    padding-inline: 0;
+    max-inline-size: none;
+  }
+
+  .contact-grid {
+    display: grid;
+    gap: 2.5rem;
+  }
+  /* 900 px es el mismo umbral de una columna que usa el hero. */
+  @media (min-width: 900px) {
+    .contact-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 27rem);
+      gap: 4rem;
+      align-items: start;
+    }
+  }
+
+  .contact-panel {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  /* La tarjeta de comando y su confirmación. Envuelven porque en móvil
+     «COPIADO» no cabe al lado de la dirección. */
+  .contact-copy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* `.snippet` del sistema con tres ajustes y ninguno inventado:
+     · el relleno vertical baja a 4 px porque el botón de copiar va DENTRO y
+       conserva sus 44 px de objetivo táctil — se le quita aire a la tarjeta,
+       nunca altura al control;
+     · la dirección sube a 16 px: es lo único que hay que leer aquí;
+     · `min-inline-size: 0` deja que la tarjeta encoja dentro del flex y que su
+       propio `overflow-x` haga el trabajo en pantallas estrechas. */
+  .contact-snippet {
+    gap: 0.5rem;
+    padding-block: 0.25rem;
+    padding-inline: 0.875rem 0.3125rem;
+    font-size: var(--text-base);
+    min-inline-size: 0;
+  }
+  /* SIN JAVASCRIPT el botón sigue con su `hidden` puesto y no ocupa nada: si la
+     tarjeta se quedara con los 5 px de relleno que le hacen sitio, la dirección
+     acabaría pegada al filete. Se le devuelven los 14 px. Un navegador sin
+     `:has()` ve la variante estrecha, que es cosmética. */
+  .contact-snippet:has(> .hidden) {
+    padding-inline-end: 0.875rem;
+  }
+  /* La dirección no se parte nunca: si no cabe, la tarjeta se desplaza. */
+  .contact-mail {
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .contact-copy-btn {
+    flex: none;
+    min-inline-size: 0;
+  }
+
+  .contact-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Baldosas de perfil: icono arriba, marca debajo. `auto-fit` con un mínimo de
+     96 px —lo que mide «LinkedIn» en mono más su relleno— las deja en tres
+     hasta un móvil de 360 px y en dos por debajo, sin un solo punto de ruptura
+     escrito a mano. */
+  .contact-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  /* Fondo TRANSPARENTE a propósito: una superficie opaca aquí taparía el
+     degradado con un rectángulo gris. Filete de 1 px y nada más — cero
+     sombras, cero desplazamiento al pasar por encima: lo único que cambia es
+     el filete y el color del texto, como en `.card`. */
+  .contact-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    min-block-size: 2.75rem;
+    padding: 0.875rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--text-xs--letter-spacing);
+    color: var(--color-text-2);
+    text-decoration: none;
+    transition:
+      border-color var(--dur-micro) var(--ease-out-quint),
+      color        var(--dur-micro) var(--ease-out-quint);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .contact-tile:hover {
+      border-color: var(--color-border-ui);
+      color: var(--color-text);
+    }
+  }
+  .contact-tile:focus-within {
+    border-color: var(--color-border-ui);
+  }
+</style>
 
 <script>
   // Copiar el correo. Progresivo de verdad: el botón está oculto en el HTML y

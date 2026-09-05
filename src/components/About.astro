@@ -9,6 +9,19 @@ interface Props {
 }
 
 const { about } = Astro.props;
+
+/**
+ * `about.paragraphs` NO se renderiza a propósito.
+ *
+ * Eran tres párrafos largos justo debajo de la entradilla: el bloque de texto
+ * que hacía la sección abrumadora, y encima redundante, porque los cuatro
+ * pilares ya cuentan lo mismo —producto grande, propiedad de extremo a extremo,
+ * IA medida y docencia— con la mitad de palabras y en piezas escaneables.
+ * Quien quiera el desarrollo se descarga el CV.
+ *
+ * El texto SIGUE en `es.ts` y en `en.ts`, y no se borra: de ahí salen los dos
+ * currículums en PDF, que sí son el sitio donde esa prosa tiene sentido.
+ */
 ---
 
 <section class="section" id={SECTION_IDS.about} aria-labelledby="about-title">
@@ -21,30 +34,67 @@ const { about } = Astro.props;
       <p class="section-lead">{about.lead}</p>
     </header>
 
-    <div class="grid max-w-content gap-x-6 gap-y-12 xl:grid-cols-12">
-      <!-- 7 columnas. Prosa a 68ch: el reparto solo se abre a partir de 1280 px,
-           donde la columna de texto conserva su medida sin comerse el gutter. -->
-      <div class="measure space-y-6 xl:col-span-7" data-reveal>
-        {about.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
-      </div>
-
-      <!-- 5 columnas. Pila de filas con filete superior, alineadas a la línea de
-           retícula: sin iconos y sin tarjetas, es decisión explícita del sistema
-           (DESIGN §6.2). El filete es lo único que separa un pilar del siguiente. -->
-      <ul class="measure xl:col-span-5">
-        {
-          about.pillars.map((pillar, index) => (
-            <li
-              class="border-t border-border pt-6 pb-8 last:pb-0"
-              data-reveal
-              data-reveal-delay={revealDelay(index)}
-            >
-              <h3 class="text-xl font-normal">{pillar.title}</h3>
-              <p class="mt-2 text-sm text-text-2">{pillar.body}</p>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
+    <!-- Los pilares dejan de ser una columna lateral y pasan a SER la sección:
+         cuatro «Feature Section Card» del sistema en dos columnas. Sin fondo,
+         sin sombra y sin icono: título de 18/700, cuerpo corto y un filete de
+         1 px por encima, que es lo único que separa una tarjeta de la de al
+         lado (DESIGN §6.2). -->
+    <ul class="pillars max-w-content" role="list">
+      {
+        about.pillars.map((pillar, index) => (
+          <li class="pillar" data-reveal data-reveal-delay={revealDelay(index)}>
+            <p class="label pillar-num" data-num>
+              {String(index + 1).padStart(2, '0')}
+            </p>
+            <h3 class="pillar-title">{pillar.title}</h3>
+            <p class="pillar-body">{pillar.body}</p>
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </section>
+
+<style>
+  /* Rejilla de dos columnas desde 768 px. Cuatro tarjetas → dos filas de dos,
+     con el filete superior de cada una alineado con el de su vecina: la
+     retícula se lee sola sin dibujar ni una línea vertical. */
+  .pillars {
+    display: grid;
+    gap: 0;
+  }
+  @media (min-width: 768px) {
+    .pillars {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 3rem;
+    }
+  }
+
+  /* Filete + aire. El relleno inferior es mayor que el superior para que el
+     filete de la fila siguiente no se pegue al cuerpo de la anterior. */
+  .pillar {
+    border-top: 1px solid var(--color-border);
+    padding-block: 1.25rem 2rem;
+  }
+
+  /* `01`…`04` en mono de 11 px: el mismo cintillo numerado que la cinta de
+     índice y los kickers de sección. Ordena la lectura sin añadir una palabra. */
+  .pillar-num {
+    margin-bottom: 0.625rem;
+  }
+
+  .pillar-title {
+    font-size: var(--text-lg);
+    line-height: 1.3;
+    font-weight: 700;
+    color: var(--color-text);
+    text-wrap: balance;
+  }
+
+  .pillar-body {
+    margin-top: 0.5rem;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    color: var(--color-text-2);
+  }
+</style>

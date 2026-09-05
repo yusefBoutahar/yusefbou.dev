@@ -90,6 +90,7 @@ export const en: SiteContent = {
     title: 'Experience',
     lead: '{{EXP}} of engineering since August 2022, on top of an earlier teaching stretch that also overlaps the first year.',
     presentLabel: 'Present',
+    detailLabel: 'View detail',
     jobs: [
       {
         role: 'Senior Product & Experience Engineer',
@@ -203,6 +204,7 @@ export const en: SiteContent = {
     problemLabel: 'The problem',
     approachLabel: 'The approach',
     resultLabel: 'The result',
+    detailLabel: 'View detail',
     caseStudies: [
       {
         id: 'capa-de-agentes',
@@ -595,6 +597,7 @@ export const en: SiteContent = {
 
   education: {
     title: 'Education',
+    highlightLabel: 'Hardware and signal',
     items: [
       {
         title: 'BSc in Computer Engineering — Software Engineering specialism',
@@ -656,6 +659,7 @@ export const en: SiteContent = {
     linkedinLabel: 'LinkedIn',
     githubLabel: 'GitHub',
     youtubeLabel: 'YouTube',
+    profilesLabel: 'Profiles',
     cvLabel: 'Download CV (PDF)',
     note: 'I reply to anything that comes with a bit of context: what you are building, on what stack, and what you expect from the person. Native Spanish, fluent professional English in technical settings.',
   },

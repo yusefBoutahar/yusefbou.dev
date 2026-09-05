@@ -12,62 +12,72 @@ interface Props {
 const { lang, education } = Astro.props;
 
 /**
- * Una fila de formación, ya preparada para maquetar.
- * El diccionario mete el trabajo de fin de grado dentro de `detail`, y
- * DESIGN §6.6 pide que vaya en su propia línea. En vez de recortar por índice
- * o por idioma —las dos cosas se rompen al primer cambio de contenido—
- * separamos por frases: la primera es el detalle corriente y lo que sobre se
- * anexa como nota. Hoy solo dispara en el grado; si mañana otra titulación
- * gana una segunda frase, el trato es el mismo sin tocar nada.
+ * Una fila de formación, ya reducida a lo que se maqueta.
+ *
+ * SIN PÁRRAFOS. El diccionario mete hasta tres frases dentro de `detail` —el
+ * trabajo de fin de grado explica ahí su arquitectura y anuncia sus vídeos— y
+ * en pantalla eso convertía una lista en cuatro bloques de prosa. Se conserva
+ * la PRIMERA frase, que es la que dice qué fue cada titulación, y el resto se
+ * queda en el diccionario alimentando el CV en PDF. Los dos vídeos del TFG
+ * dicen mejor que ninguna frase lo que el TFG fue.
+ *
+ * El corte es por frase y no por índice ni por idioma: las dos cosas se rompen
+ * al primer cambio de contenido.
  */
 interface EducationEntry {
   title: string;
   org: string;
   period: string;
+  /** Primera frase de `detail`. Nunca más de una. */
   detail: string;
-  /** Rótulo corrido de la nota: lo que va antes de los dos puntos. */
-  noteLead: string | null;
-  /** Cuerpo de la nota. `null` cuando el detalle es de una sola frase. */
-  noteBody: string | null;
   /** Prueba en vídeo. Hoy solo la tiene el trabajo de fin de grado. */
   videos: VideoRef[];
 }
 
 const entries: EducationEntry[] = education.items.map((item) => {
-  const [first, ...rest] = item.detail.split(/(?<=\.)\s+/);
-  const note = rest.join(' ').trim();
-  const colon = note.indexOf(':');
+  const [first] = item.detail.split(/(?<=\.)\s+/);
 
   return {
     title: item.title,
     org: item.org,
     period: item.period,
     detail: first ?? item.detail,
-    noteLead: colon > 0 ? note.slice(0, colon) : null,
-    noteBody: colon > 0 ? note.slice(colon + 1).trim() : note || null,
     videos: item.videos ?? [],
   };
 });
+
+/**
+ * Qué fila se destaca. NO se decide por índice: se destaca la que trae prueba
+ * en vídeo, que hoy es el trabajo de fin de grado y es además lo único de
+ * hardware y señal de toda la página. Si mañana otra titulación gana vídeos,
+ * hereda el trato sin tocar nada.
+ */
+function isFeatured(entry: EducationEntry): boolean {
+  return entry.videos.length > 0;
+}
 ---
 
 <!-- 06 · Formación. La sección menos importante de la página, y la maqueta lo
-     dice: banda de --surface compartida con Docencia, una sola columna, cuatro
-     filas separadas por filete y ni una tarjeta, ni una métrica, ni mono fuera
-     de las fechas (DESIGN §6.6).
-     Ancho: max-w-narrow, el mismo de Docencia y el que se le fuerza aquí a
-     .section-head, para que las dos secciones de la banda compartan retícula y
-     el filete de la primera fila caiga bajo la vertical del cintillo.
+     dice: banda de --surface compartida con Docencia, la MISMA placa, el MISMO
+     ancho y la MISMA anatomía de fila. Las dos se leen como un solo registro
+     partido en dos capítulos; el filete a sangre que las separa es el cambio
+     de capítulo, no un cambio de tema.
+     Ancho: `max-w-content`, el mismo de Docencia y el que ya usan Perfil,
+     Experiencia y Stack, para que las dos secciones de la banda compartan
+     retícula con el resto de la página.
      Alineación: a la izquierda del shell, como las otras cinco secciones. El
      centrado que pedía §6.6 dejaba 312 px muertos a la izquierda a 1440 y
-     partía en dos la vertical de la página; se conserva la medida (45rem) y
-     se cambia solo el eje. -->
+     partía en dos la vertical de la página; se conserva la medida y se cambia
+     solo el eje. -->
 <section
   class="section section-surface"
   id={SECTION_IDS.education}
   aria-labelledby="education-title"
 >
   <div class="shell">
-    <header class="section-head max-w-narrow" data-reveal>
+    <!-- Esta cabecera no tiene entradilla, así que los 48 px de `.section-head`
+         dejaban el título colgando sobre un hueco vacío. -->
+    <header class="section-head mb-8" data-reveal>
       <p class="section-kicker">
         <span><span data-num>{SECTION_INDEX.education}</span> · {education.title}</span>
       </p>
@@ -76,37 +86,54 @@ const entries: EducationEntry[] = education.items.map((item) => {
 
     <!-- role="list": Preflight quita las viñetas y con ellas la semántica de
          lista en VoiceOver; el rol explícito la devuelve. -->
-    <ul role="list" class="max-w-narrow">
+    <ul
+      role="list"
+      class="max-w-content overflow-hidden rounded-lg border border-border bg-bg"
+    >
       {
         entries.map((entry, i) => (
           <li
-            class="grid gap-y-2 border-t border-border py-6 md:grid-cols-[140px_minmax(0,1fr)] md:gap-x-6 md:gap-y-0"
+            class:list={[
+              'grid gap-y-1 border-t border-border p-5 first:border-t-0 md:grid-cols-[var(--col-period)_minmax(0,1fr)] md:gap-x-6',
+              /* El destacado es el «panel teñido» del sistema más el filete de
+                 acento de `.card-current`: los dos recursos que Convex reserva
+                 al elemento que manda dentro de una lista. Ni sombra, ni
+                 tamaño distinto, ni color nuevo. */
+              isFeatured(entry) && 'border-l-2 border-l-accent-fg bg-accent-tint',
+            ]}
             data-reveal
             data-reveal-delay={revealDelay(i)}
           >
-            {/* md:pt-1 alinea ópticamente la mayúscula de la fecha con la del título. */}
-            <p class="font-mono text-xs text-text-3 md:pt-1" data-num>
+            {/* md:pt-0.5 alinea ópticamente la mayúscula de la fecha con la del
+                título. El ancho de columna sale de `--col-period`, el token que
+                el sistema define una vez para las listas con fecha. */}
+            <p class="font-mono text-xs text-text-3 md:pt-0.5" data-num>
               {entry.period}
             </p>
 
             <div>
-              <h3 class="text-xl font-normal">{entry.title}</h3>
-              <p class="mt-1 text-sm text-text-2">{entry.org}</p>
-              <p class="mt-3 text-sm text-text-2">{entry.detail}</p>
-
-              {entry.noteBody && (
-                <p class="mt-4 border-l border-border-strong pl-4 text-base text-text-2">
-                  {entry.noteLead && (
-                    <span class="font-medium text-text">{entry.noteLead}:</span>
-                  )}
-                  {entry.noteBody}
-                </p>
+              {isFeatured(entry) && (
+                <p class="pill mb-2">{education.highlightLabel}</p>
               )}
 
+              <h3 class="text-base font-medium text-text">{entry.title}</h3>
+              <p class="mt-0.5 text-sm text-text-2">{entry.org}</p>
+              <p class="mt-2 max-w-[68ch] text-sm text-text-3">{entry.detail}</p>
+
               {/* El trabajo de fin de grado es la única fila con vídeo, y son
-                  dos: van en pareja debajo de la nota, que es justo donde el
-                  texto acaba de prometerlos. */}
-              {entry.videos.length > 0 && <Videos lang={lang} videos={entry.videos} />}
+                  dos: van en pareja debajo de la línea de detalle, que es
+                  justo donde el texto deja de explicar y empieza la prueba.
+                  El tope de 560 px NO es decorativo: `Videos.astro` declara sus
+                  `sizes` para una pareja de ~240 px y sus miniaturas miden 480
+                  de origen. Con la columna entera (756 px) cada tarjeta pediría
+                  370 px y el navegador seguiría bajándose la de 240: ampliada y
+                  borrosa. A 560 la pareja cae en 272 px, que es lo que el
+                  componente promete. */}
+              {entry.videos.length > 0 && (
+                <div class="max-w-[35rem]">
+                  <Videos lang={lang} videos={entry.videos} />
+                </div>
+              )}
             </div>
           </li>
         ))

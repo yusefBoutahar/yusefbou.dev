@@ -1,9 +1,16 @@
 /* ============================================================================
-   yusefbou.dev — sistema de diseño «EXPEDIENTE»
+   yusefbou.dev — sistema de diseño «CONVEX» (cream paper engineering notebook)
    Tailwind CSS 4 puro (plugin de Vite). SIN tailwind.config.
-   Fuente de verdad: scratchpad/DESIGN.md.
    Ningún componente escribe un hex: todo pasa por token.
-   Contrastes verificados con scratchpad/contrast.mjs → 72 pares, 0 fallos.
+   Contrastes verificados con `node scripts/contrast.mjs` → 38 pares, 0 fallos.
+   Hashes de la CSP: `node scripts/csp-hashes.mjs check` DESPUÉS de cada build.
+
+   Reglas duras del sistema, para no erosionarlo con el tiempo:
+     · CERO sombras. La separación es superficie + filete de 1 px.
+     · Radio máximo 16 px: el sistema es escuadrado y compacto.
+     · Una sola familia de texto (Inter). Nada de serif ni de segunda sans.
+     · Los colores de sintaxis (rosa, violeta, verde, amarillo) son SEMÁNTICOS,
+       reservados a bloques de código. Este sitio no tiene ninguno: no se usan.
    ========================================================================= */
 
 @import "tailwindcss";
@@ -19,52 +26,109 @@
   color-scheme: light dark;
 
   /* Reserva — modo oscuro plano */
-  --ui-bg: #0A0B0D;
-  --ui-surface: #121418;
-  --ui-surface-2: #1A1D22;
-  --ui-accent-tint: #221C12;
-  --ui-border: #26292F;
-  --ui-border-strong: #383C44;
-  --ui-border-ui: #666B74;
-  --ui-text: #F0F1F3;
-  --ui-text-2: #A6AAB2;
-  --ui-text-3: #868B94;
-  --ui-accent: #E9A23B;
-  --ui-accent-hi: #F5B455;
-  --ui-accent-fg: #E9A23B;
-  --ui-accent-ink: #0A0B0D;
-  --ui-ok: #2FBF71;
-  --ui-edge: rgb(255 255 255 / 0.045);
-  --ui-shadow: transparent;
-  --ui-selection: #3A2C12;
+  --ui-bg: #141414;
+  --ui-surface: #292929;
+  --ui-surface-2: #38383a;
+  --ui-accent-tint: #1d2a30;
+  --ui-border: #38383a;
+  --ui-border-strong: #4f4f52;
+  --ui-border-ui: #87878a;
+  --ui-text: #f6f6f6;
+  --ui-text-2: #c9c9cc;
+  --ui-text-3: #a2a2a6;
+  --ui-accent: #69bee2;
+  --ui-accent-hi: #8ccdea;
+  --ui-accent-fg: #69bee2;
+  --ui-accent-ink: #141414;
+  --ui-focus: #69bee2;
+  --ui-selection: #1d2a30;
 }
 
 :root {
-  /* Conmutación real — light-dark(claro, oscuro) */
-  --ui-bg:            light-dark(#FBFAF9, #0A0B0D);
-  --ui-surface:       light-dark(#FFFFFF, #121418);
-  --ui-surface-2:     light-dark(#F4F3F1, #1A1D22);
-  --ui-accent-tint:   light-dark(#FBF1DE, #221C12);
-  --ui-border:        light-dark(#E4E2DE, #26292F);
-  --ui-border-strong: light-dark(#C9C6C0, #383C44);
-  --ui-border-ui:     light-dark(#8B8880, #666B74);
-  --ui-text:          light-dark(#14161A, #F0F1F3);
-  --ui-text-2:        light-dark(#56595F, #A6AAB2);
-  --ui-text-3:        light-dark(#64676E, #868B94);
-  --ui-accent:        light-dark(#E9A23B, #E9A23B); /* SOLO relleno */
-  --ui-accent-hi:     light-dark(#D8912B, #F5B455);
-  --ui-accent-fg:     light-dark(#8A5313, #E9A23B); /* texto y marcas */
-  --ui-accent-ink:    light-dark(#14161A, #0A0B0D);
-  --ui-ok:            light-dark(#0F7A3D, #2FBF71);
-  --ui-edge:          light-dark(rgb(255 255 255 / 0.90), rgb(255 255 255 / 0.045));
-  --ui-shadow:        light-dark(rgb(16 18 22 / 0.10), transparent);
-  --ui-selection:     light-dark(#FBF1DE, #3A2C12);
+  /* Conmutación real — light-dark(claro, oscuro).
+     CLARO = lienzo crema de Convex. OSCURO = sus propias superficies oscuras
+     (#141414 lienzo, #292929 tarjeta, #38383a filete): no es una paleta
+     inventada, es la que el sistema ya define para sus secciones oscuras. */
+  --ui-bg:            light-dark(#f6f6f6, #141414);
+  --ui-surface:       light-dark(#ffffff, #292929);
+  --ui-surface-2:     light-dark(#f7f1ff, #38383a);
+  --ui-accent-tint:   light-dark(#eaf6fb, #1d2a30);
+  --ui-border:        light-dark(#e5e5e5, #38383a);
+  --ui-border-strong: light-dark(#d7d7d7, #4f4f52);
+  /* Borde de CONTROL, el único que WCAG 1.4.11 exige a 3:1. Verificado contra
+     las tres superficies del tema; los filetes decorativos usan --ui-border. */
+  --ui-border-ui:     light-dark(#8a8a8d, #87878a);
+  --ui-text:          light-dark(#141414, #f6f6f6);
+  --ui-text-2:        light-dark(#4f4f52, #c9c9cc);
+  /* OJO: en claro NO puede ser Ash (#a9a9ac): da 2,17:1 y falla. El sistema
+     reserva Ash a placeholder y deshabilitado, nunca a contenido. */
+  --ui-text-3:        light-dark(#6d6d70, #a2a2a6);
+
+  /* El acento no es un color de marca: Convex no tiene color de CTA propio.
+     En crema el botón primario es tinta sobre relleno oscuro («Filled Dark
+     CTA»); en oscuro es tinta sobre azul señal («Blue Signal CTA»), que el
+     sistema reserva justamente a las secciones oscuras. */
+  --ui-accent:        light-dark(#141414, #69bee2); /* SOLO relleno */
+  --ui-accent-hi:     light-dark(#292929, #8ccdea); /* hover del relleno */
+  --ui-accent-fg:     light-dark(#141414, #69bee2); /* texto y marcas */
+  --ui-accent-ink:    light-dark(#ffffff, #141414); /* tinta sobre relleno */
+
+  /* Anillo de foco propio. Antes era el acento ámbar; con un acento neutro
+     necesita token propio para seguir cumpliendo 3:1 en los dos temas. */
+  --ui-focus:         light-dark(#141414, #69bee2);
+  --ui-selection:     light-dark(#eaf6fb, #1d2a30);
 }
 
-/* Conmutador de tres estados: atributo ausente = lo que diga el sistema.
-   Forzar un tema solo cambia `color-scheme`; los tokens se recalculan solos. */
+/* Forzar un tema solo cambia `color-scheme`; los tokens se recalculan solos.
+   Sin atributo manda `prefers-color-scheme`. */
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"]  { color-scheme: dark; }
+
+/* ----------------------------------------------------------------------------
+   ÁMBITO OSCURO — la firma del sistema.
+
+   Convex no es «una web crema»: es un lienzo crema con LOSAS OSCURAS donde vive
+   el producto. Aquí eso son el hero y los marcos de captura.
+
+   La losa no se pinta clase a clase: se redeclara la capa cruda dentro de ella,
+   y todo el subárbol —tarjetas, chips, filetes, texto secundario— se recalcula
+   solo, en los dos temas y sin duplicar una sola regla. En tema oscuro los
+   valores coinciden con los de la página, así que la losa se funde con el
+   lienzo, que es exactamente lo que debe pasar.
+   ------------------------------------------------------------------------- */
+
+.on-dark {
+  color-scheme: dark;
+  --ui-bg: #141414;
+  --ui-surface: #292929;
+  --ui-surface-2: #38383a;
+  --ui-accent-tint: #1d2a30;
+  --ui-border: #38383a;
+  --ui-border-strong: #4f4f52;
+  --ui-border-ui: #87878a;
+  --ui-text: #f6f6f6;
+  --ui-text-2: #c9c9cc;
+  --ui-text-3: #a2a2a6;
+  --ui-accent: #69bee2;
+  --ui-accent-hi: #8ccdea;
+  --ui-accent-fg: #69bee2;
+  --ui-accent-ink: #141414;
+  --ui-focus: #69bee2;
+
+  /* `.on-dark` SOLO remapea tokens; el fondo lo pone cada bloque, porque no es
+     el mismo: la losa del hero es una placa opaca y la banda de contacto es un
+     degradado. Si el fondo viviera aquí, ganaría a los dos por cascada —esta
+     regla está fuera de `@layer components`— y no habría forma limpia de
+     distinguirlos. */
+  color: var(--ui-text);
+}
+
+/* Tono de la losa, resuelto CONTRA EL TEMA DE LA PÁGINA y no contra el del
+   propio bloque: sobre crema es tinta —contraste máximo—, y sobre lienzo
+   oscuro sube un punto para que la placa se siga leyendo como placa en vez de
+   fundirse con el papel. Vive en :root a propósito: dentro de `.on-dark` el
+   `color-scheme` ya es oscuro y `light-dark()` daría siempre la misma rama. */
+:root { --slab-bg: light-dark(#141414, #1f1f21); }
 
 /* ----------------------------------------------------------------------------
    2. @theme inline — expone la capa cruda como utilidades de Tailwind.
@@ -87,88 +151,117 @@
   --color-accent-hi:     var(--ui-accent-hi);
   --color-accent-fg:     var(--ui-accent-fg);
   --color-accent-ink:    var(--ui-accent-ink);
-  --color-ok:            var(--ui-ok);
+  --color-focus:         var(--ui-focus);
 }
 
 @theme {
-  /* Familias tipográficas — variables, autoalojadas con @fontsource-variable */
-  --font-display: "Source Serif 4 Variable", "Source Serif Fallback", Georgia, "Times New Roman", serif;
+  /* UNA sola familia de texto. El sistema prohíbe explícitamente introducir una
+     segunda sans, y no contempla serif: fuera Source Serif 4. `--font-display`
+     se conserva como alias de la sans para no reescribir los componentes que ya
+     lo consumen, y para que un titular nunca pueda divergir del cuerpo.
+     Inter es el sustituto que nombra el propio documento para GT America. */
   --font-sans:    "Inter Variable", "Inter Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-sans);
   --font-mono:    "JetBrains Mono Variable", ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
 
-  /* Escala tipográfica fluida — 360 px → 1440 px, raíz 16 px.
-     Cada paso lleva su interlineado y su tracking: `text-3xl` ya viene compuesto. */
-  --text-2xs: clamp(0.6875rem, 0.667rem + 0.09vw, 0.75rem);      /* 11 → 12 */
-  --text-2xs--line-height: 1.2;
-  --text-2xs--letter-spacing: 0.09em;
+  /* Escala de Convex, hecha FLUIDA. El documento da tamaños fijos (14/16/20/36/
+     40/56) pensados para escritorio; 56 px fijos desbordan un móvil de 390. Cada
+     paso interpola de 360 px a 1200 px —el nuevo ancho máximo de página— y
+     ATERRIZA en el valor del documento. Los nombres de token no cambian, así que
+     los componentes siguen funcionando sin tocarlos. */
 
-  --text-xs: clamp(0.75rem, 0.729rem + 0.09vw, 0.8125rem);       /* 12 → 13 */
-  --text-xs--line-height: 1.45;
-  --text-xs--letter-spacing: 0.01em;
+  /* caption — cintillos y versalitas. El documento pide 10 px; se sube a 11
+     porque a 10 la mayúscula acentuada española pierde legibilidad. */
+  --text-2xs: 0.6875rem;                                          /* 11 */
+  --text-2xs--line-height: 1.25;
+  --text-2xs--letter-spacing: 0.05em;
 
-  --text-sm: clamp(0.875rem, 0.854rem + 0.09vw, 0.9375rem);      /* 14 → 15 */
-  --text-sm--line-height: 1.55;
+  --text-xs: clamp(0.75rem, 0.723rem + 0.12vw, 0.8125rem);        /* 12 → 13 */
+  --text-xs--line-height: 1.4;
+  --text-xs--letter-spacing: 0.025em;
 
-  --text-base: clamp(1rem, 0.979rem + 0.09vw, 1.0625rem);        /* 16 → 17 */
-  --text-base--line-height: 1.65;
+  /* body — 14 px, el tamaño de interfaz del sistema */
+  --text-sm: 0.875rem;                                            /* 14 */
+  --text-sm--line-height: 1.5;
 
-  --text-lg: clamp(1.125rem, 1.083rem + 0.19vw, 1.25rem);        /* 18 → 20 */
-  --text-lg--line-height: 1.55;
+  /* body-lg — 16 px, la PROSA. El sistema prohíbe cuerpo por debajo de 14 o por
+     encima de 18: este sitio tiene párrafos de verdad, así que la prosa va a 16
+     y la interfaz a 14. Ambos dentro del rango. */
+  --text-base: clamp(0.9375rem, 0.911rem + 0.12vw, 1rem);         /* 15 → 16 */
+  --text-base--line-height: 1.5;
 
-  --text-xl: clamp(1.25rem, 1.167rem + 0.37vw, 1.5rem);          /* 20 → 24 */
-  --text-xl--line-height: 1.25;
-  --text-xl--letter-spacing: -0.01em;
+  --text-lg: clamp(1.0625rem, 1.036rem + 0.12vw, 1.125rem);       /* 17 → 18 */
+  --text-lg--line-height: 1.5;
 
-  --text-2xl: clamp(1.5rem, 1.333rem + 0.74vw, 2rem);            /* 24 → 32 */
-  --text-2xl--line-height: 1.15;
+  /* subheading — 20 px */
+  --text-xl: clamp(1.125rem, 1.071rem + 0.24vw, 1.25rem);         /* 18 → 20 */
+  --text-xl--line-height: 1.38;
+
+  /* Paso puente que el documento no tiene y esta maqueta sí necesita: títulos
+     de tarjeta, entre subheading y heading. */
+  --text-2xl: clamp(1.375rem, 1.214rem + 0.71vw, 1.75rem);        /* 22 → 28 */
+  --text-2xl--line-height: 1.3;
   --text-2xl--letter-spacing: -0.02em;
 
-  --text-3xl: clamp(1.875rem, 1.583rem + 1.30vw, 2.75rem);       /* 30 → 44 */
-  --text-3xl--line-height: 1.08;
+  /* heading — 36 px, tracking −0,9 px */
+  --text-3xl: clamp(1.625rem, 1.357rem + 1.19vw, 2.25rem);        /* 26 → 36 */
+  --text-3xl--line-height: 1.25;
   --text-3xl--letter-spacing: -0.025em;
 
-  --text-4xl: clamp(2.5rem, 1.833rem + 2.96vw, 4.5rem);          /* 40 → 72 */
-  --text-4xl--line-height: 1.02;
-  --text-4xl--letter-spacing: -0.03em;
+  /* display — 56 px, tracking −2,8 px. Interlineado 1,05 y no el 1,0 del
+     documento: en español los titulares llevan Á, Ñ y Ü, y a 1,0 se recortan. */
+  --text-4xl: clamp(2.125rem, 1.536rem + 2.62vw, 3.5rem);         /* 34 → 56 */
+  --text-4xl--line-height: 1.05;
+  --text-4xl--letter-spacing: -0.05em;
 
-  /* Anchos máximos → utilidades `max-w-*` */
+  /* Anchos máximos → utilidades `max-w-*`.
+     El sistema fija la página en 1200 px: el shell baja de 90rem a 75rem y el
+     resto de contenedores se reescalan por debajo. */
   --container-prose:   68ch;
-  --container-narrow:  45rem;
-  --container-content: 70rem;
-  --container-wide:    80rem;
-  --container-shell:   90rem;
+  --container-narrow:  40rem;   /* 640 */
+  --container-content: 60rem;   /* 960 */
+  --container-wide:    70rem;   /* 1120 */
+  --container-shell:   75rem;   /* 1200 — ancho de página del sistema */
 
-  /* Radios — techo de 20 px a propósito: el radio grande es la firma de la plantilla */
+  /* Radios del sistema: 4 etiquetas · 8 botones · 12 tarjetas y navegación ·
+     16 contenedores grandes. TECHO DE 16: el sistema es escuadrado y compacto,
+     y el documento prohíbe pasar de ahí. */
   --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 
   /* Curvas */
   --ease-out-quint: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-soft:      cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-/* Sombras, duraciones y ritmo: propiedades planas.
-   No son espacios de nombres de Tailwind y no generan utilidades a propósito. */
-:root {
-  --shadow-sm: 0 1px 2px var(--ui-shadow);
-  --shadow-md: 0 2px 4px var(--ui-shadow), 0 8px 20px -8px var(--ui-shadow);
-  --shadow-lg: 0 16px 40px -14px var(--ui-shadow);
-  --edge: inset 0 1px 0 var(--ui-edge);
+/* Duraciones y ritmo: propiedades planas.
+   No son espacios de nombres de Tailwind y no generan utilidades a propósito.
 
+   NO HAY TOKENS DE SOMBRA, y es deliberado: «Convex evita las sombras de forma
+   deliberada; toda la separación se consigue con contraste de superficie y
+   filetes de 1 px». Si algún día reaparece un `box-shadow`, está fuera del
+   sistema. */
+:root {
   --dur-micro: 120ms;
   --dur-state: 180ms;
   --dur-enter: 320ms;
-  --dur-hero:  420ms;
 
-  --space-section: clamp(4.5rem, 3.33rem + 5.19vw, 8rem);  /* 72 → 128 */
-  --gutter:        clamp(1.25rem, 4vw, 3rem);              /* 20 → 48 */
-  --header-h:      3.5rem;                                 /* 56 px */
-  --rail-w:        2.25rem;                                /* 36 px — caja fija de la cinta */
-  --rail-air:      2rem;                                   /* 32 px — aire hasta el texto */
-  --measure-h1:    30ch;                                   /* techo de medida del h1 */
+  /* Ritmo del documento: 64 px entre secciones, 24 px de padding de tarjeta,
+     12 px de gap de elemento. La sección se hace fluida para que en móvil no
+     desperdicie pantalla. */
+  --space-section: clamp(3rem, 2.24rem + 3.33vw, 4rem);    /* 48 → 64 */
+  --gutter:        clamp(1rem, 0.81rem + 0.83vw, 1.5rem);  /* 16 → 24 */
+  --card-padding:  1.5rem;                                 /* 24 */
+  --element-gap:   0.75rem;                                /* 12 */
+  --header-h:      4rem;                                   /* 64 — altura de nav del sistema */
+  --rail-w:        2.25rem;                                /* 36 — caja fija de la cinta */
+  --rail-air:      2rem;                                   /* 32 — aire hasta el texto */
+  --measure-h1:    18ch;                                   /* el display de 56 px pide medida corta */
+  --col-period:    8.75rem;                                /* 140 — columna de fechas, antes repetida
+                                                              en cuatro sitios y dos unidades */
 }
 
 /* ----------------------------------------------------------------------------
@@ -185,14 +278,8 @@
   line-gap-override: 0%;
 }
 
-@font-face {
-  font-family: "Source Serif Fallback";
-  src: local("Georgia");
-  size-adjust: 100.2%;
-  ascent-override: 96.7%;
-  descent-override: 32.5%;
-  line-gap-override: 0%;
-}
+/* La reserva del serif desaparece con Source Serif 4: una sola familia, una
+   sola métrica de reserva. */
 
 /* ----------------------------------------------------------------------------
    4. BASE
@@ -210,14 +297,17 @@
     color: var(--color-text);
     font-family: var(--font-sans);
     font-size: var(--text-base);
-    line-height: 1.65;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
+  /* Peso 700 en titulares: el sistema reserva 400/500 al cuerpo y 700 al
+     énfasis. Antes eran 600 porque el serif lo pedía; la grotesca no. */
   h1, h2, h3 {
     font-family: var(--font-display);
+    font-weight: 700;
     color: var(--color-text);
     text-wrap: balance;
   }
@@ -232,9 +322,11 @@
     color: var(--color-text);
   }
 
-  /* Un solo foco para todo el sitio. El anillo aparece instantáneo. */
+  /* Un solo foco para todo el sitio. El anillo aparece instantáneo.
+     Token propio, no el acento: con un acento neutro (tinta en claro) el
+     anillo tiene que seguir garantizando 3:1 en los dos temas por su cuenta. */
   :focus-visible {
-    outline: 2px solid var(--color-accent-fg);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
     border-radius: inherit;
   }
@@ -274,31 +366,30 @@
     margin-bottom: 3rem;
   }
 
-  /* `01 · EXPERIENCIA` — el cintillo mono que abre toda sección. */
+  /* `01 · EXPERIENCIA` — cintillo de sección. Deja de ser un filete de acento
+     con texto al lado y pasa a ser la ETIQUETA EN PÍLDORA del sistema: versalitas
+     de 11 px con tracking de 0,05em dentro de un filete de 1 px y radio de 4 px.
+     Es el mismo objeto que Convex usa para su eyebrow `PRODUCT`. */
   .section-kicker {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
-    line-height: 1.2;
-    letter-spacing: 0.09em;
+    line-height: 1.25;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--color-text-3);
     margin-bottom: 1rem;
-  }
-  .section-kicker::before {
-    content: "";
-    inline-size: 1.5rem;
-    block-size: 2px;
-    background-color: var(--color-accent-fg);
-    flex: none;
   }
 
   .section-title {
     font-family: var(--font-display);
     font-size: var(--text-3xl);
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-text);
   }
 
@@ -318,35 +409,159 @@
 
   .measure { max-width: var(--container-prose); }
 
-  .rule { border: 0; border-top: 1px solid var(--color-border); }
+  /* --- Plegado -----------------------------------------------------------
+     La pieza que decide la densidad del sitio. La página enseña el titular,
+     una línea de resultado y las cifras; el desarrollo se pliega aquí.
+
+     `<details>` nativo: funciona sin JavaScript, es accesible de serie y el
+     navegador ya gestiona el estado. Nada de acordeón a mano.
+     ---------------------------------------------------------------------- */
+
+  .disclosure {
+    border-top: 1px solid var(--color-border);
+    margin-top: 1rem;
+  }
+
+  .disclosure-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-block: 0.75rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-3);
+    list-style: none;
+    transition: color var(--dur-micro) var(--ease-out-quint);
+  }
+  /* El triángulo por defecto es de otra época y de otro sistema. */
+  .disclosure-summary::-webkit-details-marker { display: none; }
+  .disclosure-summary::marker { content: ""; }
+  .disclosure-summary:hover { color: var(--color-text); }
+
+  /* Cruz que se convierte en guion al abrir. UN solo pseudoelemento con dos
+     degradados cruzados: con dos elementos el `gap` del summary los separaba y
+     la cruz salía partida. Sin icono que cargar y sin marcado extra. */
+  .disclosure-summary::after {
+    content: "";
+    flex: none;
+    margin-inline-start: auto;
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    background:
+      linear-gradient(currentColor, currentColor) center / 100% 1px no-repeat,
+      linear-gradient(currentColor, currentColor) center / 1px 100% no-repeat;
+    transition: transform var(--dur-state) var(--ease-out-quint);
+  }
+  /* Abierto: desaparece el trazo vertical y queda el guion. */
+  .disclosure[open] > .disclosure-summary::after {
+    background: linear-gradient(currentColor, currentColor) center / 100% 1px no-repeat;
+    transform: rotate(180deg);
+  }
+
+  .disclosure-body { padding-block-end: 1rem; }
+
+  /* --- Tarjeta de navegador ----------------------------------------------
+     La «Dashboard Preview Card» del sistema. Marco de producto con su barra
+     superior y el dominio dentro: es exactamente lo que el sistema pide como
+     imagen —captura de producto, no fotografía— y lo que ya son las capturas
+     de los tres sitios en producción.
+     ---------------------------------------------------------------------- */
+
+  .browser-card {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+  }
+
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-block-end: 1px solid var(--color-border);
+    background-color: var(--color-surface-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.025em;
+    color: var(--color-text-3);
+  }
+  /* Tres puntos de semáforo, del sistema. Decorativos: el dominio va en texto. */
+  .browser-dots {
+    display: flex;
+    gap: 0.25rem;
+    flex: none;
+  }
+  .browser-dots i {
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 999px;
+    background-color: var(--color-border-strong);
+  }
+  .browser-shot { display: block; inline-size: 100%; }
+
+  /* --- Tarjeta de comando -------------------------------------------------
+     La «Command Snippet Card»: relleno oscuro, mono, y el icono de copiar al
+     final. En este sitio su contenido honesto es el correo.
+     ---------------------------------------------------------------------- */
+
+  .snippet {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    max-inline-size: 100%;
+    /* Una dirección de correo en monoespaciada no tiene por dónde partir, así
+       que en pantallas estrechas empujaba la tarjeta fuera del lienzo. Se deja
+       que el contenido baje de línea y que el bloque pueda encogerse: sin
+       `min-inline-size: 0` un hijo flexible se niega a bajar de su tamaño
+       mínimo de contenido y desborda en silencio. */
+    flex-wrap: wrap;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+  .snippet > * { min-inline-size: 0; }
+  .snippet-prompt { color: var(--color-text-3); flex: none; }
+
+  /* --- Banda oscura -------------------------------------------------------
+     El «Dark Gradient Hero Banner». Degradado en diagonal del casi-negro cálido
+     al azul frío. Es el ÚNICO degradado que el sistema permite, y solo como
+     fondo de sección: nunca en un elemento de interfaz.
+     ---------------------------------------------------------------------- */
+
+  .band-dark {
+    background-image: linear-gradient(135deg, rgb(34, 31, 29), rgb(49, 43, 43) 28%, rgba(41, 57, 105, 0.9) 50%);
+    border-radius: var(--radius-xl);
+    border: 0;
+  }
 
   /* --- Tarjeta ---------------------------------------------------------- */
 
+  /* CERO sombras y CERO desplazamiento al pasar por encima. El sistema es
+     explícito: la separación se consigue con superficie y filete de 1 px, y el
+     hover no puede inventarse elevación. Lo único que cambia es el filete. */
   .card {
     position: relative;
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    box-shadow: var(--edge), var(--shadow-sm);
-    transition:
-      border-color var(--dur-micro) var(--ease-out-quint),
-      box-shadow   var(--dur-state) var(--ease-out-quint),
-      transform    var(--dur-state) var(--ease-out-quint);
+    padding: var(--card-padding);
+    transition: border-color var(--dur-micro) var(--ease-out-quint);
   }
-  @media (min-width: 768px) { .card { padding: 2rem; } }
 
   @media (hover: hover) and (pointer: fine) {
-    .card:hover {
-      border-color: var(--color-border-strong);
-      box-shadow: var(--edge), var(--shadow-md);
-      transform: translateY(-2px);
-    }
+    .card:hover { border-color: var(--color-border-strong); }
   }
-  .card:focus-within {
-    border-color: var(--color-border-strong);
-    box-shadow: var(--edge), var(--shadow-md);
-  }
+  .card:focus-within { border-color: var(--color-border-strong); }
 
   /* El elemento que manda: puesto actual, caso destacado. */
   .card-current {
@@ -356,19 +571,24 @@
 
   /* --- Etiquetas y píldoras --------------------------------------------- */
 
-  /* Chip de tecnología. Nunca lleva icono ni color de marca. */
+  /* Chip de tecnología. Nunca lleva icono ni color de marca.
+     Sin relleno: filete de 1 px y radio de 4 px, que es el tratamiento de
+     etiqueta del sistema. El lila queda reservado a paneles teñidos, que es
+     para lo que el documento lo define; en veinte chips seguidos tiñe de
+     morado media página. */
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    background-color: var(--color-surface-2);
+    background-color: transparent;
+    border: 1px solid var(--color-border);
     color: var(--color-text-2);
     border-radius: var(--radius-xs);
-    padding: 0.1875rem 0.5rem;
+    padding: 0.125rem 0.4375rem;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    line-height: 1.45;
-    letter-spacing: 0.01em;
+    line-height: 1.4;
+    letter-spacing: 0.025em;
     white-space: nowrap;
   }
   /* Segmento de versión: `LangGraph │ 1.0`. La versión prueba que la lista es real. */
@@ -384,49 +604,31 @@
   .label {
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
-    line-height: 1.2;
-    letter-spacing: 0.09em;
+    line-height: 1.25;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--color-text-3);
   }
 
+  /* Píldora. Radio de 4 px como el resto de etiquetas del sistema: el techo es
+     16 y las píldoras de 999 px son de otra familia visual. */
   .pill {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
-    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-xs);
+    padding: 0.25rem 0.5rem;
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     color: var(--color-text-2);
   }
   .pill-accent {
     background-color: var(--color-accent-tint);
     border-color: transparent;
     color: var(--color-accent-fg);
-  }
-  /* Píldora de frase. La de disponibilidad conserva el radio de 999 —§4.4 se lo
-     reserva justo a ella— pero su texto es una oración de quince palabras y la
-     mono tiene un techo duro de tres (§3.2): se compone en Inter, y el punto de
-     estado se alinea con la primera línea cuando el texto envuelve. */
-  .pill-prose {
-    align-items: flex-start;
-    max-width: 46ch;
-    padding: 0.5rem 1rem;
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    letter-spacing: 0;
-  }
-  .pill-prose .dot { margin-block-start: 0.5em; }
-
-  /* Punto de estado. SIEMPRE acompañado de su etiqueta de texto. */
-  .dot {
-    inline-size: 0.4375rem;
-    block-size: 0.4375rem;
-    border-radius: 999px;
-    background-color: var(--color-ok);
-    flex: none;
   }
 
   /* --- Métricas --------------------------------------------------------- */
@@ -452,6 +654,12 @@
       display: grid;
       grid-template-rows: subgrid;
       grid-row: span 2;
+      /* `justify-content: flex-end` es de la rama flexible, donde empuja el
+         contenido al extremo SUPERIOR del eje invertido. Al pasar a rejilla ese
+         mismo valor actúa sobre el eje EN LÍNEA y manda la cifra a la derecha
+         en cuanto la celda es ancha. Hay que neutralizarlo aquí. */
+      justify-content: stretch;
+      grid-template-columns: minmax(0, 1fr);
     }
     .stat-band .stat-value { grid-row: 1; }
     .stat-band .stat-label { grid-row: 2; }
@@ -501,8 +709,8 @@
     justify-content: center;
     gap: 0.5rem;
     min-block-size: 2.75rem;         /* 44 px — objetivo táctil */
-    padding: 0.625rem 1.125rem;
-    border-radius: var(--radius-md);
+    padding: 0.625rem 1.25rem;       /* 10 / 20 del sistema */
+    border-radius: var(--radius-md); /* 8 px — radio de botón del sistema */
     border: 1px solid transparent;
     font-family: var(--font-sans);
     font-size: var(--text-sm);
@@ -516,15 +724,20 @@
       color            var(--dur-micro) var(--ease-out-quint);
   }
 
-  /* El ámbar SOLO existe como relleno, con `--color-accent-ink` encima.
-     El borde de 1 px le da un límite verificable de 6.05:1 en claro,
-     donde el relleno contra el papel solo llega a 2.08:1. */
+  /* El sistema NO tiene color de CTA: el botón primario es un relleno neutro.
+     En crema es tinta sobre oscuro («Filled Dark CTA», el CTA por defecto del
+     sistema); en tema oscuro pasa a azul señal, que es justo donde el sistema
+     lo permite. En los dos casos el relleno ya da contraste de sobra, así que
+     el borde acompaña al relleno en vez de rescatarlo. */
   .btn-primary {
     background-color: var(--color-accent);
-    border-color: var(--color-accent-fg);
+    border-color: var(--color-accent);
     color: var(--color-accent-ink);
   }
-  .btn-primary:hover { background-color: var(--color-accent-hi); }
+  .btn-primary:hover {
+    background-color: var(--color-accent-hi);
+    border-color: var(--color-accent-hi);
+  }
 
   .btn-secondary {
     background-color: transparent;
@@ -534,6 +747,21 @@
   .btn-secondary:hover {
     background-color: var(--color-surface-2);
     border-color: var(--color-text-3);
+  }
+
+  /* Sobre una superficie oscura el primario se invierte a relleno claro: es el
+     «Filled Light CTA» del sistema, la acción de mayor contraste disponible
+     ahí. Lo demás no hace falta redefinirlo: `.on-dark` reescribe los tokens
+     (más abajo) y el resto de clases se recalculan solas. */
+  .on-dark .btn-primary {
+    background-color: var(--ui-text);
+    border-color: var(--ui-text);
+    color: var(--ui-bg);
+  }
+  .on-dark .btn-primary:hover {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-accent-ink);
   }
 
   .btn-ghost {
@@ -561,11 +789,33 @@
   /* --- Hero -------------------------------------------------------------- */
 
   /* Nunca 100vh: en móvil la barra del navegador lo convierte en un salto. */
+  /* EL HERO ES UNA LOSA OSCURA FLOTANDO SOBRE EL LIENZO CREMA. Es la firma del
+     sistema y lo que el documento no dice pero el sitio de referencia enseña:
+     el momento de producto no es una sección de fondo distinto, es una placa
+     con radio y margen propio, separada del papel por aire.
+     El contenido interior sigue respetando el shell, así que el titular se
+     alinea con el resto de secciones de la página. */
   .hero {
     display: flex;
     align-items: center;
-    min-block-size: min(88vh, 780px);
-    padding-block: clamp(2.5rem, 1.5rem + 4.5vw, 5rem);
+    /* Más baja que antes: la losa se dimensiona por su contenido, y el sistema
+       es compacto —«densidad de cuaderno», no de landing con aire de sobra—. */
+    min-block-size: min(76vh, 620px);
+    /* La losa mide lo mismo que el shell y lleva el gutter POR DENTRO: así su
+       contenido cae exactamente sobre la misma vertical que el de las secciones
+       de abajo, y el borde de la placa queda por fuera, sobre el crema. */
+    inline-size: calc(100% - var(--gutter) * 2);
+    max-inline-size: var(--container-shell);
+    margin-inline: auto;
+    margin-block-start: var(--gutter);
+    padding-inline: var(--gutter);
+    padding-block: clamp(2rem, 1.2rem + 3.5vw, 3.5rem);
+    border-radius: var(--radius-xl);
+    background-color: var(--slab-bg);
+  }
+  .hero > .shell {
+    padding-inline: 0;
+    max-inline-size: none;
   }
   /* En móvil se apila y la foto va DEBAJO del titular: el h1 es el LCP. */
   .hero-grid {
@@ -639,9 +889,11 @@
     position: sticky;
     inset-block-start: 0;
     z-index: 50;
-    background-color: color-mix(in oklab, var(--color-bg) 82%, transparent);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    /* Fondo SÓLIDO, sin desenfoque. El sistema describe la barra de navegación
+       con fondo pleno, y además el `backdrop-filter` obliga al navegador a
+       recomponer la franja en cada scroll: era el mayor coste de renderizado de
+       la página en móvil. Más fiel y más barato a la vez. */
+    background-color: var(--color-bg);
     border-bottom: 1px solid transparent;
     transition:
       border-color     200ms var(--ease-soft),

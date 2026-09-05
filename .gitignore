@@ -40,3 +40,8 @@ CLAUDE.md
 
 # Documento de revisión interno, no va al repositorio público.
 REVISION.md
+
+# Intermedios de los generadores de activos (scripts/): HTML con las fuentes
+# incrustadas y capturas de paso. Se regeneran solos y pesan de más.
+scripts/cv/.build/
+scripts/.og-build/

@@ -31,8 +31,8 @@ const RANGE_SEPARATOR = /\s+[—–-]\s+/;
 
 /**
  * `ago. 2022 — ene. 2026` → `['ago. 2022 —', 'ene. 2026']`. Los dos extremos se
- * componen por separado para que la columna de 140 px parta el rango por el
- * guion y nunca por dentro de una fecha.
+ * componen por separado para que la columna de `--col-period` parta el rango
+ * por el guion y nunca por dentro de una fecha.
  *
  * En el puesto actual solo se pinta el primer tramo: el final del rango lo dice
  * la píldora con `presentLabel`, que el diccionario ya repite dentro de
@@ -82,24 +82,21 @@ function periodParts(period: string): string[] {
                 <span class="font-medium">{job.company}</span> · {job.location}
               </p>
 
-              <p class:list={['measure text-base', job.current ? 'mt-5' : 'mt-4']}>{job.summary}</p>
+              {/* La única prosa que la vista inicial enseña de un puesto: una
+                  frase. Todo lo demás se pliega o se resume en chips. */}
+              <p class:list={['measure text-base', job.current ? 'mt-5' : 'mt-3']}>{job.summary}</p>
 
-              <ul class:list={['exp-bullets measure', job.current ? 'mt-6' : 'mt-4']} role="list">
-                {job.bullets.map((bullet, position) => (
-                  /* En un puesto cerrado el primer bullet es el de liderazgo
-                     técnico y va en peso 500: es lo que se lee primero. */
-                  <li
-                    class:list={[
-                      'text-sm text-text-2',
-                      { 'font-medium': !job.current && position === 0 },
-                    ]}
-                  >
-                    {bullet}
-                  </li>
-                ))}
-              </ul>
+              {job.current ? (
+                /* El puesto actual manda y son cinco líneas, no veinte: se
+                   quedan a la vista. Es lo primero que se lee de la sección. */
+                <ul class="exp-bullets measure mt-6" role="list">
+                  {job.bullets.map((bullet) => (
+                    <li class="text-sm text-text-2">{bullet}</li>
+                  ))}
+                </ul>
+              ) : null}
 
-              <ul class:list={['chip-list', job.current ? 'mt-8' : 'mt-6']} role="list">
+              <ul class:list={['chip-list', job.current ? 'mt-8' : 'mt-4']} role="list">
                 {job.tags.map((tag) => {
                   const { name, version } = splitVersion(tag);
                   return (
@@ -107,6 +104,32 @@ function periodParts(period: string): string[] {
                   );
                 })}
               </ul>
+
+              {!job.current && (
+                /* Plegado canónico del sistema. `<details>` nativo: sin
+                   JavaScript, accesible de serie y con el estado en manos del
+                   navegador. Cierra la fila, con su filete de remate. */
+                <details class="disclosure">
+                  {/* El cargo va dentro del nombre accesible: con varios puestos
+                      cerrados, «Ver detalle» a secas se repetiría sin decir de
+                      qué. Absoluto, así que no cuenta como ítem del flex. */}
+                  <summary class="disclosure-summary">
+                    {experience.detailLabel}<span class="sr-only"> · {job.role}</span>
+                  </summary>
+                  <div class="disclosure-body">
+                    <ul class="exp-bullets measure" role="list">
+                      {job.bullets.map((bullet, position) => (
+                        /* En un puesto cerrado el primer bullet es el de
+                           liderazgo técnico y va en peso 500: es lo que se lee
+                           primero al abrir. */
+                        <li class:list={['text-sm text-text-2', { 'font-medium': position === 0 }]}>
+                          {bullet}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </details>
+              )}
             </div>
           </li>
         ))
@@ -133,28 +156,33 @@ function periodParts(period: string): string[] {
   /* Anatomía de DESIGN §6.3: lista vertical con columna de fechas, no línea de
      tiempo. Aquí solo hay maqueta; tipografía y color salen de las utilidades
      derivadas de los tokens, y las piezas repetidas (.card, .card-current,
-     .chip, .pill-accent, .label, .link) de global.css. Ninguna de estas reglas
-     se repite en otra sección, así que no suben a la hoja global. */
+     .chip, .pill-accent, .label, .link, .disclosure) de global.css. Ninguna de
+     estas reglas se repite en otra sección, así que no suben a la hoja global.
+
+     La densidad la decide el plegado: de un puesto cerrado se ve el periodo, el
+     cargo, la empresa, UNA frase y los chips. Las viñetas viven dentro del
+     `<details>`. Antes eran más de veinte seguidas. */
 
   .exp-entry {
     display: grid;
     gap: 0.75rem;
   }
 
-  /* Desde 768 px, columna de periodo fija de 140 px. */
+  /* Desde 768 px, columna de periodo del ancho del token del sistema. */
   @media (min-width: 768px) {
     .exp-entry {
-      grid-template-columns: 8.75rem minmax(0, 1fr);
+      grid-template-columns: var(--col-period) minmax(0, 1fr);
       column-gap: 1.5rem;
       row-gap: 0;
       align-items: start;
     }
   }
 
-  /* Puesto cerrado: lo separa un filete, no una caja. */
+  /* Puesto cerrado: lo separa un filete, no una caja. El remate inferior es más
+     corto que la entrada porque el `<summary>` ya trae 12 px de relleno propio. */
   .exp-entry-plain {
     border-top: 1px solid var(--color-border);
-    padding-block: 2rem;
+    padding-block: 2rem 1.25rem;
   }
 
   /* El empleo actual manda: tarjeta con canto de acento y el doble de aire
@@ -172,7 +200,7 @@ function periodParts(period: string): string[] {
     }
   }
 
-  /* El rango se compone por tramos: en la columna de 140 px cae en dos líneas
+  /* El rango se compone por tramos: en la columna de periodo cae en dos líneas
      partiendo por el guion, y en móvil ocupa una sola. */
   .exp-when {
     display: flex;
@@ -181,10 +209,22 @@ function periodParts(period: string): string[] {
     column-gap: 0.5rem;
     row-gap: 0.375rem;
   }
-  /* Alineación óptica con la primera línea del cargo, que es serif de 20-24 px. */
+
+  /* Corrección óptica RECALIBRADA para Inter (antes se compensaba un serif, y
+     0,3 rem dejaba el periodo bajo). Alinea la ALTURA DE MAYÚSCULA del mono de
+     13 px con la del cargo, que es la referencia que el ojo usa en una fila de
+     dos columnas. Sale de restar los dos desplazamientos de línea:
+       cargo cerrado   20/1,38 → mayúscula a 6,52 px del alto de línea
+       cargo actual     28/1,3 → mayúscula a 8,01 px
+       periodo mono     13/1,4 → mayúscula a 4,29 px
+     De ahí los 2,2 px de una fila y los 3,7 px de la tarjeta. Medido sobre la
+     captura a 1440: el guion del rango cae a ras del ojo de la mayúscula. */
   @media (min-width: 768px) {
-    .exp-when {
-      padding-top: 0.3rem;
+    .exp-entry-plain .exp-when {
+      padding-top: 0.14rem;
+    }
+    .exp-entry-current .exp-when {
+      padding-top: 0.235rem;
     }
   }
 
@@ -198,7 +238,10 @@ function periodParts(period: string): string[] {
   }
 
   /* Bullet con guion: filete de 8 × 1 px dibujado, no un carácter metido en el
-     marcado que el lector de pantalla tendría que ignorar. */
+     marcado que el lector de pantalla tendría que ignorar.
+     `top` RECALIBRADO para Inter: el filete se planta donde caería el guion de
+     la fuente, a media altura de x sobre una línea de 14/1,5. Con el serif
+     anterior 0,72em daba en el sitio; con Inter quedaba flotando alto. */
   .exp-bullets > li {
     position: relative;
     padding-inline-start: 1.25rem;
@@ -213,7 +256,7 @@ function periodParts(period: string): string[] {
     content: "";
     position: absolute;
     inset-inline-start: 0;
-    top: 0.72em;
+    top: 0.82em;
     inline-size: 0.5rem;
     block-size: 1px;
     background-color: var(--color-text-3);
@@ -232,7 +275,7 @@ function periodParts(period: string): string[] {
   @media (min-width: 768px) {
     .exp-teaching {
       display: grid;
-      grid-template-columns: 8.75rem minmax(0, 1fr);
+      grid-template-columns: var(--col-period) minmax(0, 1fr);
       column-gap: 1.5rem;
     }
   }

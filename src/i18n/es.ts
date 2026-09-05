@@ -87,6 +87,7 @@ export const es: SiteContent = {
     title: 'Experiencia',
     lead: '{{EXP}} de ingeniería desde agosto de 2022, sobre una etapa docente previa que además se solapa con el primer año.',
     presentLabel: 'Actualidad',
+    detailLabel: 'Ver detalle',
     jobs: [
       {
         role: 'Senior Product & Experience Engineer',
@@ -200,6 +201,7 @@ export const es: SiteContent = {
     problemLabel: 'El problema',
     approachLabel: 'El enfoque',
     resultLabel: 'El resultado',
+    detailLabel: 'Ver detalle',
     caseStudies: [
       {
         id: 'capa-de-agentes',
@@ -592,6 +594,7 @@ export const es: SiteContent = {
 
   education: {
     title: 'Formación',
+    highlightLabel: 'Hardware y señal',
     items: [
       {
         title: 'Grado en Ingeniería Informática, especialidad en Ingeniería del Software',
@@ -653,6 +656,7 @@ export const es: SiteContent = {
     linkedinLabel: 'LinkedIn',
     githubLabel: 'GitHub',
     youtubeLabel: 'YouTube',
+    profilesLabel: 'Perfiles',
     cvLabel: 'Descargar currículum en PDF',
     note: 'Respondo a todo lo que llegue con un contexto mínimo: qué construís, con qué stack y qué esperáis de la persona. Español nativo, inglés avanzado en entorno técnico.',
   },

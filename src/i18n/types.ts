@@ -140,6 +140,8 @@ export interface SiteContent {
     lead: string;
     jobs: Job[];
     presentLabel: string;
+    /** Texto del <summary> que despliega las viñetas de un puesto cerrado. */
+    detailLabel: string;
   };
   work: {
     title: string;
@@ -149,6 +151,8 @@ export interface SiteContent {
     problemLabel: string;
     approachLabel: string;
     resultLabel: string;
+    /** Texto del <summary> que despliega problema y enfoque en cada caso. */
+    detailLabel: string;
     sitesTitle: string;
     sitesLead: string;
     sites: SiteProject[];
@@ -168,6 +172,11 @@ export interface SiteContent {
   };
   education: {
     title: string;
+    /**
+     * Rótulo en píldora de la fila destacada: la única con prueba en vídeo, que
+     * hoy es el trabajo de fin de grado y es lo único de hardware del sitio.
+     */
+    highlightLabel: string;
     items: EducationItem[];
   };
   contact: {
@@ -179,6 +188,8 @@ export interface SiteContent {
     githubLabel: string;
     /** Nombre visible del enlace al canal; la URL vive en `SITE.youtube`. */
     youtubeLabel: string;
+    /** Rótulo de la rejilla de baldosas de perfil; le da nombre accesible. */
+    profilesLabel: string;
     cvLabel: string;
     note: string;
   };

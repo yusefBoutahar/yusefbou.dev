@@ -1,0 +1,161 @@
+<header class="hdr">
+  <div>
+    <h1>Yousuf Boutahar El Maachi</h1>
+    <p class="role">Senior Fullstack Engineer</p>
+    <p class="loc">Gran Canaria, Spain · Remote</p>
+  </div>
+  <div class="contact">
+    <span class="lbl">Contact</span>
+    <a href="mailto:yusef@yusefbou.dev">yusef@yusefbou.dev</a>
+    <a href="https://yusefbou.dev">yusefbou.dev</a>
+    <a href="https://www.linkedin.com/in/yousuf-boutahar/">linkedin.com/in/yousuf-boutahar</a>
+    <a href="https://github.com/yusefBoutahar">github.com/yusefBoutahar</a>
+  </div>
+</header>
+
+<p class="summary">I have spent {{EXP}} writing Python and TypeScript in production. I build the whole product. And I ship it myself. At SABAU STRAPPING I own whole services —FastAPI and PostgreSQL at the back, Next.js at the front, Docker, CI/CD and a Helm chart at the end— and the AI microservices I run are the proof of it.</p>
+
+<div class="facts">
+  <span><b>~4,800</b> commits since August 2022</span>
+  <span><b>6th of ~35</b> on a 29,000-commit product</span>
+  <span><b>4</b> microservices of my own in production</span>
+</div>
+
+<section class="sec">
+  <div class="sec-h"><span class="tick"></span><h2>Experience</h2><span class="rule"></span></div>
+
+  <article class="job current">
+    <h3 class="job-role">Senior Product &amp; Experience Engineer</h3>
+    <p class="job-meta"><b>SABAU STRAPPING</b><span class="sep">·</span><span class="m">Jan 2026 — Present</span><span class="sep">·</span><span class="m">Canary Islands, remote</span></p>
+    <p class="job-sum">Full ownership of product and AI services, from the data model through to deployment on Kubernetes, plus the platform frontend. That is the formal job title; the work itself is full-stack, end to end, and that is how I introduce myself.</p>
+    <ul class="b">
+      <li>I build and run services end to end: FastAPI and Pydantic v2 with PostgreSQL at the back, Next.js and React at the front, and at the end Docker, CI/CD, a Helm chart of my own and deployment onto the production cluster.</li>
+      <li>I maintain the platform frontend in Next.js 16 and React 19: internationalization by BCP 47 tags across nine regions, analytics on hexagonal architecture, and tests in three layers with Vitest, Testing Library and Cypress with cypress-axe.</li>
+      <li>I run a RAG service over operational conversation history: semantic grouping by topic rather than by time, hybrid vector and keyword search on PostgreSQL with pgvector, and routing by how broad the query is.</li>
+      <li>I build the agent layer with LangGraph and LangChain 1.0 —multi-server MCP client, response streaming over SSE, tracing with LangSmith—, the memory service chosen between three measured architectures, and my own MCP servers with FastMCP.</li>
+    </ul>
+    <p class="tags">Python 3.12 · FastAPI · PostgreSQL + pgvector · Next.js 16 · React 19 · TypeScript 5.9 · LangGraph 1.0 · MCP · SSE · Neo4j · NATS · Kubernetes · Helm 3 · Docker</p>
+  </article>
+
+  <article class="job">
+    <h3 class="job-role">Full-Stack Developer, with technical leadership of the frontend</h3>
+    <p class="job-meta"><b>Talentus</b><span class="sep">·</span><span class="m">Aug 2022 — Jan 2026</span><span class="sep">·</span><span class="m">Gran Canaria, Spain</span></p>
+    <p class="job-sum">Online training, sales management and public funding compliance platform: 3,784 commits of mine out of 29,000, sixth of ~35 authors.</p>
+    <ul class="b">
+      <li>I led the end-to-end modernization of the interface: out went the off-the-shelf template, in came an architecture of our own, with technical standards, a team style guide and a component library.</li>
+      <li>I mentored through systematic code review, coordinated the frontend and backend teams and the stakeholders, and ran an infrastructure provider migration alongside several microservice projects in parallel.</li>
+      <li>I took ownership of entire Django domains —campaigns, social media automation, a public portal with technical SEO and charting— and moved to integrations with a workflow engine with service-to-service authentication and retries.</li>
+      <li>I optimized production queries with fast and slow paths and cache invalidation, and worked across 205 Behave scenario files on a GitLab CI pipeline with self-hosted runners.</li>
+    </ul>
+    <p class="tags">Django 4.2 · Django REST Framework · Celery · Django Channels · PostgreSQL · React 17 · TypeScript · Material UI 5 · Redux · Auth0 · Behave · GitLab CI</p>
+  </article>
+
+  <article class="job">
+    <h3 class="job-role">Instructor, civil service IT technician exam preparation course</h3>
+    <p class="job-meta"><b>Flou</b><span class="sep">·</span><span class="m">Aug 2022 — Jan 2023</span><span class="sep">·</span><span class="m">Self-employed</span></p>
+    <p class="job-sum">Full syllabus, my own materials and question banks in the real exam format, with individual follow-up across the group.</p>
+  </article>
+
+  <article class="job">
+    <h3 class="job-role">Coordinator and instructor, programming and robotics workshops</h3>
+    <p class="job-meta"><b>IUCTC</b><span class="sep">·</span><span class="m">Mar 2021 — Aug 2022</span><span class="sep">·</span><span class="m">Las Palmas de Gran Canaria</span></p>
+    <p class="job-sum">Calendar, materials and instructor team for the workshop programme, plus direct teaching to secondary school groups.</p>
+  </article>
+
+  <article class="job">
+    <h3 class="job-role">Ciberlandia programme lead — workshops in secondary schools</h3>
+    <p class="job-meta"><b>IUCTC</b><span class="sep">·</span><span class="m">Oct 2020 — Aug 2022</span><span class="sep">·</span><span class="m">Las Palmas de Gran Canaria</span></p>
+    <p class="job-sum">Technology outreach delivered inside secondary schools, part-time for nearly two years.</p>
+  </article>
+</section>
+
+<section class="sec">
+  <div class="sec-h"><span class="tick"></span><h2>Selected projects</h2><span class="rule"></span></div>
+  <p class="note">No internal names, no clients and no business figures: company work is described through skills and architectural decisions.</p>
+
+  <article class="proj">
+    <div class="proj-top">
+      <h3 class="proj-t">A complete agent layer, from zero to a shipped container in a day</h3>
+      <span class="kicker">AI and agents</span>
+    </div>
+    <dl class="par">
+      <dt>Problem</dt><dd>The agents had to use the business systems as governed tools, never with direct access to their databases: that meant authentication, scoped permissions and streaming responses.</dd>
+      <dt>Approach</dt><dd>Seven numbered pull requests: scaffolding, per-environment configuration, authentication, a scoped tool registry, a multi-server MCP client, streaming over SSE and a React dashboard, with tests, a Docker image and CI.</dd>
+      <dt>Result</dt><dd>In a single day the whole pattern was in place, with a container, CI and documentation; the service went into production later, and on it we built a canonical entity resolution agent with confidence and risk rules.</dd>
+    </dl>
+    <p class="tags">Python 3.12 · FastAPI · LangChain 1.0 · LangGraph · langchain-mcp-adapters · LangSmith · SSE · React · Vite · Docker</p>
+  </article>
+
+  <article class="proj">
+    <div class="proj-top">
+      <h3 class="proj-t">Self-hosted n8n in queue mode, delivered with an emergency runbook</h3>
+      <span class="kicker">Backend and operations</span>
+    </div>
+    <dl class="par">
+      <dt>Problem</dt><dd>Business processes had to be automated without depending on the managed version and without the data leaving our own infrastructure. And a service like that is worth nothing if nobody can bring it back up when it fails in the middle of the night.</dd>
+      <dt>Approach</dt><dd>Docker Compose with n8n in queue mode, PostgreSQL 15 as the state database and Redis 7 as the job queue, health checks and CPU and memory limits on every container, integration with the backend over service-to-service token authentication with retries, and fourteen Bash scripts for backup, restore, health monitoring and stress testing.</dd>
+      <dt>Result</dt><dd>Delivered with sixteen operations documents —high availability, emergency runbook, operations guide, backup strategy and production verification— and with the embedded credentials stripped out of the repository: a service somebody else can run without calling me.</dd>
+    </dl>
+    <p class="tags">Self-hosted n8n · Docker Compose · PostgreSQL 15 · Redis 7 · Bash · health checks and resource limits · service-to-service token auth</p>
+  </article>
+
+  <article class="proj">
+    <div class="proj-top">
+      <h3 class="proj-t">Hexagonal analytics: dropping the vendor without touching the domain</h3>
+      <span class="kicker">Architecture</span>
+    </div>
+    <dl class="par">
+      <dt>Problem</dt><dd>Analytics on the main frontend was tied to an external vendor, and that dependency worked its way into the product code, which is exactly where a third party must never reach.</dd>
+      <dt>Approach</dt><dd>Full hexagonal discipline: a repository interface that defines what the domain needs, a storage manager behind it, and a transport layer with a circuit breaker and retry so a vendor outage can neither drag the interface down nor lose events.</dd>
+      <dt>Result</dt><dd>When the call came to drop the vendor, the adapter was swapped and the domain was left untouched: zero changes. Ports and adapters demonstrated in production instead of on a whiteboard.</dd>
+    </dl>
+    <p class="tags">TypeScript 5.9 · Next.js 16 · React 19 · Hexagonal architecture · Vitest · Testing Library</p>
+  </article>
+
+  <p class="note" style="margin:1.6mm 0 0">Plus three live sites of my own in Gran Canaria: qahwa.es, tacosfrancos.es and varaderodemogan.es. Astro 6, Tailwind CSS 4 and Cloudflare Pages, from gathering the content to the domain, with a reprocessing pass that took 46 MB of images down to 4 MB.</p>
+</section>
+
+<section class="sec">
+  <div class="sec-h"><span class="tick"></span><h2>Stack</h2><span class="rule"></span></div>
+  <div class="rows">
+    <div class="row"><div class="k">Languages</div><div class="v">Python 3.12 · TypeScript 5.9 · JavaScript ES2020+ · SQL · Bash · Semantic HTML5 · Modern CSS</div></div>
+    <div class="row"><div class="k">Backend and data</div><div class="v">FastAPI · Django 4.2 and Django REST Framework · Celery · Django Channels · Async SQLAlchemy 2 · Pydantic v2 · PostgreSQL 16 with pgvector · Neo4j 5 bitemporal · Redis 7 · MongoDB · NATS</div></div>
+    <div class="row"><div class="k">Frontend</div><div class="v">React 19 and 17 · Next.js 16 · Astro 6 · Tailwind CSS 4 · Radix UI · Vite 7 · Material UI 5 · Zod · React Hook Form · TanStack Table · Three.js with React Three Fiber</div></div>
+    <div class="row"><div class="k">AI and agents</div><div class="v">LangGraph 1.0 · LangChain 1.0 · MCP (Model Context Protocol), server and client · FastMCP · langchain-mcp-adapters · LangSmith · OpenAI API · RAG with hybrid search · Graphiti · Mem0 · spaCy</div></div>
+    <div class="row"><div class="k">Infrastructure</div><div class="v">Docker · Multi-environment Docker Compose · Kubernetes · Helm 3 · Traefik as Ingress Controller · cert-manager · Linux (Rocky and Debian) · Nginx with TLS · self-hosted n8n in queue mode · Prometheus · Grafana · OpenTelemetry</div></div>
+    <div class="row"><div class="k">Security and CI/CD</div><div class="v">OIDC and OAuth2 with JWKS validation · service-to-service JWT · self-hosted Vaultwarden · Content Security Policy · TruffleHog in the pipeline · GitHub Actions · GitLab CI · GitHub Container Registry · Cloudflare Pages</div></div>
+    <div class="row"><div class="k">Quality</div><div class="v">pytest with async and parallel support · Vitest · Jest · Cypress with cypress-axe · Behave (Gherkin) · strict mypy · Ruff · ESLint · Prettier · ShellCheck · Playwright · uv · pnpm</div></div>
+  </div>
+  <p class="note" style="margin:1.2mm 0 0">This list only holds technology with commits of mine behind it. That is why you will not find Terraform here, or public cloud, or languages I do not write.</p>
+</section>
+
+<section class="sec">
+  <div class="sec-h"><span class="tick"></span><h2>Education</h2><span class="rule"></span></div>
+  <div class="edu-item">
+    <div>
+      <p class="t">BSc in Computer Engineering, Software Engineering specialism <span>· Universidad de Las Palmas de Gran Canaria (ULPGC)</span></p>
+      <p class="d">Final average: 8 out of 10. Final year project: indoor positioning on a robotics platform using Bluetooth Low Energy (BLE).</p>
+    </div>
+    <p class="p">Sep 2016 — Jun 2022</p>
+  </div>
+  <div class="edu-item">
+    <div><p class="t">Full-stack web development course, 280 hours <span>· Escuela de Organización Industrial (EOI)</span></p></div>
+    <p class="p">Mar — Jun 2022</p>
+  </div>
+  <div class="edu-item">
+    <div><p class="t">Software testing course, 124 hours <span>· Escuela de Organización Industrial (EOI)</span></p></div>
+    <p class="p">Jun — Jul 2022</p>
+  </div>
+  <div class="edu-item">
+    <div><p class="t">Train-the-trainer methodology and e-learning design <span>· Professional qualification</span></p></div>
+    <p class="p">2023</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-h"><span class="tick"></span><h2>Teaching and languages</h2><span class="rule"></span></div>
+  <p class="prose"><b>Teaching.</b> Nearly two years of programming and robotics workshops in secondary schools, coordinating the programme and its instructors, a civil service IT technician exam preparation course, and internal technical courses inside a product company. Explaining well trains the same muscle as defending an architectural decision or leaving a code review that teaches.</p>
+  <p class="prose" style="margin-top:0.9mm"><b>Languages.</b> Spanish, native. English, advanced in technical settings: documentation, code review and working meetings.</p>
+</section>
+
+<p class="colophon"><span>Yousuf Boutahar El Maachi · Senior Fullstack Engineer</span><span>yusefbou.dev · yusef@yusefbou.dev</span></p>

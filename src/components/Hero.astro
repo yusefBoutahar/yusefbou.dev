@@ -18,9 +18,12 @@ interface Props {
 const { hero, githubLabel, linkedinLabel, portrait } = Astro.props;
 ---
 
-<!-- §6.1. Dos tercios / un tercio, min(88vh, 780px), nunca 100vh.
-     En móvil se apila y la foto queda DEBAJO del titular: el h1 es el LCP. -->
-<section class="section hero" id={SECTION_IDS.hero} aria-labelledby="hero-title">
+<!-- Losa oscura sobre el lienzo crema: el «momento de producto» del sistema.
+     `on-dark` redeclara la capa de tokens para todo el subárbol, así que las
+     clases de dentro no saben que están sobre oscuro y no hay una sola regla
+     duplicada. Dos tercios / un tercio; en móvil se apila y la foto queda
+     DEBAJO del titular, porque el h1 es el LCP. -->
+<section class="section hero on-dark" id={SECTION_IDS.hero} aria-labelledby="hero-title">
   <div class="shell hero-grid">
     <div>
       <div data-reveal>

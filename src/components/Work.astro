@@ -46,6 +46,13 @@ for (const id of anchorIds) {
   }
   seenIds.add(id);
 }
+
+/**
+ * El dominio que va en la barra de la tarjeta de navegador. Sale de la MISMA
+ * URL a la que enlaza la tarjeta, no de una cadena escrita a mano en el
+ * diccionario: así la barra no puede mentir sobre el destino del enlace.
+ */
+const domainOf = (url: string) => new URL(url).hostname.replace(/^www\./, '');
 ---
 
 <section class="section" id={SECTION_IDS.work} aria-labelledby="work-title">
@@ -67,13 +74,6 @@ for (const id of anchorIds) {
         work.caseStudies.map((study, i) => {
           const chips = study.tech.slice(0, MAX_CHIPS).map(splitVersion);
           const extra = study.tech.slice(MAX_CHIPS);
-          // El trío PROBLEMA/ENFOQUE/RESULTADO es el formato de un documento de
-          // decisión técnica: comunica cómo escribe quien firma antes de leerlo.
-          const rows: [string, string][] = [
-            [work.problemLabel, study.problem],
-            [work.approachLabel, study.approach],
-            [work.resultLabel, study.result],
-          ];
 
           return (
             <li
@@ -82,21 +82,22 @@ for (const id of anchorIds) {
               data-reveal
               data-reveal-delay={revealDelay(i)}
             >
-              <div class:list={['card', 'case-card', i === 0 && 'card-current case-featured']}>
+              <article class:list={['card', 'case-card', i === 0 && 'card-current']}>
                 <p class="case-kicker label">
                   <span class="case-num" data-num>{String(i + 1).padStart(2, '0')}</span> · {study.kicker}
                 </p>
                 <h3 class:list={['case-title', i === 0 ? 'text-3xl' : 'text-2xl']}>{study.title}</h3>
 
+                {/* La tarjeta enseña el GANCHO y las pruebas, nada más. El trío
+                    PROBLEMA/ENFOQUE/RESULTADO sigue entero, pero de los tres
+                    solo el resultado se lee sin pedirlo: es el único que
+                    responde «¿y qué pasó?», que es lo que trae a quien lee.
+                    Los otros dos son el desarrollo y se pliegan abajo. */}
                 <div class="case-body">
-                  <dl class="case-trio">
-                    {rows.map(([label, body]) => (
-                      <div class="case-row">
-                        <dt class="label">{label}</dt>
-                        <dd class="measure text-sm text-text-2">{body}</dd>
-                      </div>
-                    ))}
-                  </dl>
+                  <p class="case-hook">
+                    <span class="label case-hook-label">{work.resultLabel}</span>
+                    <span class="case-hook-text">{study.result}</span>
+                  </p>
 
                   <div class="case-aside">
                     {study.metrics && study.metrics.length > 0 && (
@@ -125,7 +126,26 @@ for (const id of anchorIds) {
                     </ul>
                   </div>
                 </div>
-              </div>
+
+                {/* `<details>` nativo, la pieza del sistema: sin JavaScript, con
+                    estado del navegador y accesible de serie. Sin JS la página
+                    se ve entera y el plegado se abre igual. */}
+                <details class="disclosure">
+                  <summary class="disclosure-summary">{work.detailLabel}</summary>
+                  <div class="disclosure-body">
+                    <dl class="case-trio">
+                      <div class="case-row">
+                        <dt class="label">{work.problemLabel}</dt>
+                        <dd class="measure text-sm text-text-2">{study.problem}</dd>
+                      </div>
+                      <div class="case-row">
+                        <dt class="label">{work.approachLabel}</dt>
+                        <dd class="measure text-sm text-text-2">{study.approach}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </details>
+              </article>
             </li>
           );
         })
@@ -138,73 +158,79 @@ for (const id of anchorIds) {
         <p class="sites-lead text-base text-text-2">{work.sitesLead}</p>
       </header>
 
-      <ul class="site-grid max-w-wide">
+      <ul class="site-list max-w-wide" aria-labelledby="work-sites-title">
         {
           work.sites.map((site, i) => {
             const shot = shots[site.shot];
             const id = siteAnchorId(site.shot);
 
             return (
-              <li id={id} data-reveal data-reveal-delay={revealDelay(i)}>
+              <li class="site-row" id={id} data-reveal data-reveal-delay={revealDelay(i)}>
                 {/* Toda la tarjeta enlaza al sitio VIVO, nunca al repositorio.
                     El nombre accesible sale del título más la acción, los dos
                     del diccionario; el resto del contenido sigue leyéndose. */}
                 <a
-                  class="card site-card"
+                  class="site-card"
                   href={site.url}
                   target="_blank"
                   rel="noopener"
                   aria-labelledby={`${id}-name ${id}-visit`}
                 >
-                  <div class="shot" data-shot-frame>
-                    {shot && (
-                      <Picture
-                        src={shot}
-                        alt={site.shotAlt}
-                        formats={['avif', 'webp']}
-                        fallbackFormat="jpeg"
-                        width={720}
-                        height={450}
-                        widths={[360, 540, 720, 1080]}
-                        sizes="(min-width: 1280px) 360px, (min-width: 1024px) 30vw, (min-width: 768px) 44vw, 90vw"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    )}
-                    {/* Las dos flechas de texto de la tarjeta se convierten en
-                        icono; no se añade ninguna marca nueva. La barra dice
-                        que el destino es EXTERNO (`external-link`) y el título
-                        conserva su flecha ámbar, ahora dibujada
-                        (`arrow-up-right`). Los dos son decorativos: el nombre
-                        accesible del enlace lo componen `aria-labelledby` con
-                        el título y la etiqueta «Visitar el sitio». */}
-                    <span class="visit-bar text-xs" id={`${id}-visit`}>
-                      {work.visitLabel}<Icon name="external-link" size={16} />
-                    </span>
+                  {/* «Dashboard Preview Card» del sistema. La captura es lo más
+                      grande de la sección a propósito: enseña el trabajo en vez
+                      de describirlo, y el dominio en mono dentro de la barra
+                      dice a dónde va el enlace sin gastar una línea de texto. */}
+                  <div class="browser-card">
+                    <div class="browser-bar">
+                      <span class="browser-dots" aria-hidden="true"><i /><i /><i /></span>
+                      <span class="browser-url">{domainOf(site.url)}</span>
+                      <span class="browser-visit" id={`${id}-visit`}>
+                        {work.visitLabel}<Icon name="external-link" size={14} />
+                      </span>
+                    </div>
+                    <div class="browser-frame" data-shot-frame>
+                      {shot && (
+                        <Picture
+                          class="browser-shot"
+                          src={shot}
+                          alt={site.shotAlt}
+                          formats={['avif', 'webp']}
+                          fallbackFormat="jpeg"
+                          width={960}
+                          height={600}
+                          widths={[360, 540, 720, 1080, 1440]}
+                          sizes="(min-width: 1200px) 640px, (min-width: 900px) 55vw, calc(100vw - 2rem)"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      )}
+                    </div>
                   </div>
 
-                  <h4 class="site-name" id={`${id}-name`}>
-                    {site.name}<span class="site-arrow"><Icon name="arrow-up-right" size={16} /></span>
-                  </h4>
-                  <p class="site-desc text-sm text-text-2">{site.description}</p>
+                  <div class="site-info">
+                    <h4 class="site-name" id={`${id}-name`}>
+                      {site.name}<span class="site-arrow"><Icon name="arrow-up-right" size={18} /></span>
+                    </h4>
+                    <p class="site-desc text-sm text-text-2">{site.description}</p>
 
-                  <dl class="site-stats">
-                    {site.metrics.map((metric) => (
-                      <div class="stat">
-                        <dt class="stat-label">{metric.label}</dt>
-                        <dd class="stat-value">{metric.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
+                    <dl class="stat-band site-stats">
+                      {site.metrics.map((metric) => (
+                        <div class="stat">
+                          <dt class="stat-label">{metric.label}</dt>
+                          <dd class="stat-value">{metric.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
 
-                  <ul class="chip-list">
-                    {site.tech.slice(0, MAX_CHIPS).map(splitVersion).map(({ name, version }) => (
-                      <li class="chip">
-                        {name}
-                        {version && <span class="chip-version">{version}</span>}
-                      </li>
-                    ))}
-                  </ul>
+                    <ul class="chip-list">
+                      {site.tech.slice(0, MAX_CHIPS).map(splitVersion).map(({ name, version }) => (
+                        <li class="chip">
+                          {name}
+                          {version && <span class="chip-version">{version}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </a>
               </li>
             );
@@ -234,8 +260,8 @@ for (const id of anchorIds) {
 <style>
   /* Maqueta propia de la sección 03. Todo sale de tokens: aquí no hay ni un
      hex, ni una familia literal, ni un tamaño fuera de la escala. Los patrones
-     repetidos del sitio (.card, .chip, .stat-*, .label) siguen viniendo de
-     global.css; esto es solo la retícula que DESIGN §6.4 describe. */
+     repetidos del sitio (.card, .chip, .stat-*, .label, .disclosure-*,
+     .browser-*) siguen viniendo de global.css; esto es solo la retícula. */
 
   .work-note {
     border-top: 1px solid var(--color-border);
@@ -261,7 +287,7 @@ for (const id of anchorIds) {
   /* La animación de entrada vive en la celda, no en la tarjeta: `.is-in` fija
      `transform: none` fuera de capa y le comería el hover a `.card`. */
   .case-grid > li,
-  .site-grid > li { display: grid; }
+  .site-list > li { display: grid; }
   .case-cell-wide { grid-column: 1 / -1; }
 
   /* Cada tarjeta es destino de enlace profundo (`…/#sso-oidc`, citado desde
@@ -273,15 +299,24 @@ for (const id of anchorIds) {
      inferior de la cabecera. Con movimiento reducido no hay animación y los
      16 px se leen como aire. En los dos casos el título entra entero. */
   .case-grid > li,
-  .site-grid > li { scroll-margin-top: 1rem; }
+  .site-list > li { scroll-margin-top: 1rem; }
 
-  /* El ancho que manda para el trío es el de la TARJETA, no el de la ventana:
-     con dos columnas la misma tarjeta es ancha o estrecha según el caso. */
-  .case-card { container-type: inline-size; }
+  /* El ancho que manda para el reparto es el de la TARJETA, no el de la
+     ventana: con dos columnas la misma tarjeta es ancha o estrecha según el
+     caso, y la que se expande a fila entera (la primera, y la última cuando
+     queda sola) tiene que repartir gancho y pruebas en vez de dejar medio
+     metro en blanco. La consulta de contenedor lo resuelve sin saber CUÁL es
+     la tarjeta ancha: lo decide el ancho real. */
+  .case-card {
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+  }
 
   .case-title {
     margin-top: 0.75rem;
     font-weight: 600;
+    text-wrap: pretty;
   }
 
   .case-num { transition: color var(--dur-micro) var(--ease-out-quint); }
@@ -289,40 +324,46 @@ for (const id of anchorIds) {
     .case-card:hover .case-num { color: var(--color-accent-fg); }
   }
 
+  /* El margen inferior no es decorativo: en columna flexible los márgenes NO
+     se colapsan, así que es el aire mínimo que el `margin-top: auto` del
+     plegado no puede garantizar cuando la tarjeta va llena. */
   .case-body {
     display: grid;
     gap: 1.75rem;
-    margin-top: 1.75rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  .case-trio { display: grid; gap: 1rem; }
-  .case-row > dt { margin-bottom: 0.25rem; }
+  /* La tarjeta pasa a caja flexible en columna para poder empujar el plegado
+     al pie con `margin-top: auto`. Un ítem flexible arrastra un tamaño mínimo
+     automático igual a su min-content, y aquí el cuerpo es una rejilla
+     anidada: el cero corta esa cadena y deja que la franja de cifras caiga a
+     una columna en el móvil en vez de estirar la tarjeta. */
+  .case-body { min-inline-size: 0; }
 
-  /* Columna de etiquetas en cuanto la tarjeta da de sí. 6.5rem y no las 5.5rem
-     del boceto: «THE APPROACH» en mono de 12 px con +0.09em mide 99 px y
-     partiría la etiqueta en dos líneas. */
-  @container (min-width: 30rem) {
-    .case-row {
-      display: grid;
-      grid-template-columns: 6.5rem minmax(0, 1fr);
-      column-gap: 1rem;
-      align-items: start;
-    }
-    .case-row > dt {
-      margin-bottom: 0;
-      padding-top: 0.25rem;
-    }
+  /* EL GANCHO. Una sola línea de lectura por tarjeta, en el color del texto
+     principal: si solo se lee esto, ya se sabe qué pasó. */
+  .case-hook { max-width: var(--container-prose); }
+  .case-hook-label {
+    display: block;
+    margin-bottom: 0.375rem;
+    color: var(--color-accent-fg);
   }
-
-  /* El caso 01 es el gancho: ocupa las dos columnas y, cuando hay sitio,
-     reparte cuerpo y pruebas en 7/5 en vez de dejar medio metro en blanco. */
-  @container (min-width: 52rem) {
-    .case-featured .case-body {
+  .case-hook-text {
+    display: block;
+    font-size: var(--text-base);
+    line-height: 1.6;
+    color: var(--color-text-2);
+    text-wrap: pretty;
+  }
+  /* En la tarjeta ancha el gancho es el titular de verdad y sube un escalón. */
+  @container (min-width: 46rem) {
+    .case-body {
       grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-      column-gap: 3rem;
-      margin-top: 2rem;
+      column-gap: 2.5rem;
       align-items: start;
     }
+    .case-hook-text { font-size: var(--text-lg); }
   }
 
   .case-aside {
@@ -342,6 +383,15 @@ for (const id of anchorIds) {
     background-color: var(--color-surface);
     padding: 1rem 1.25rem;
   }
+  /* La celda del sistema es `flex-direction: column-reverse` con
+     `justify-content: flex-end`, que ahí significa «arriba». Cuando la rama de
+     `@supports (subgrid)` la convierte en rejilla, ese mismo `flex-end` deja de
+     alinear el bloque y pasa a empujar la PISTA al final del eje en línea: en
+     una celda más ancha que su contenido, la cifra se va a la derecha. Una
+     columna explícita de `1fr` llena la pista y lo deja quieto, sin tocar el
+     `justify-content` que la rama flexible sí necesita. */
+  .case-stats > .stat,
+  .site-stats > .stat { grid-template-columns: minmax(0, 1fr); }
   .case-stats > .stat:first-child { padding-inline-start: 0; }
   .case-stats > .stat:last-child { padding-inline-end: 0; }
 
@@ -352,44 +402,76 @@ for (const id of anchorIds) {
 
   .chip-more { color: var(--color-text-3); }
 
+  /* El plegado cierra la tarjeta: `margin-top: auto` lo empuja al pie para que
+     dos tarjetas vecinas alineen su «VER DETALLE» aunque una tenga el título
+     a dos líneas y la otra a una. */
+  .case-card > .disclosure {
+    margin-top: auto;
+  }
+  .case-trio { display: grid; gap: 1rem; }
+  .case-row > dt { margin-bottom: 0.25rem; }
+
+  /* Columna de etiquetas en cuanto la tarjeta da de sí. 6.5rem y no las 5.5rem
+     del boceto: «THE APPROACH» en mono de 12 px con +0.09em mide 99 px y
+     partiría la etiqueta en dos líneas. */
+  @container (min-width: 30rem) {
+    .case-row {
+      display: grid;
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      column-gap: 1rem;
+      align-items: start;
+    }
+    .case-row > dt {
+      margin-bottom: 0;
+      padding-top: 0.25rem;
+    }
+  }
+
   /* --- Sitios en producción ---------------------------------------------- */
 
   .sites { margin-top: clamp(4rem, 3rem + 4vw, 6rem); }
   .sites-title { font-weight: 600; }
   .sites-lead { margin-top: 0.75rem; }
 
-  .site-grid {
+  /* Fila entera por sitio, no tres columnas estrechas: la captura pasa de
+     360 px a 640 px de ancho, que es lo que la convierte en el elemento más
+     visual de la sección. Tres filas de imagen pesan menos de leer que tres
+     párrafos, aunque ocupen más pantalla. */
+  .site-list {
     display: grid;
-    gap: 1.5rem;
+    gap: clamp(2.5rem, 1.5rem + 4vw, 4rem);
     margin-top: 2rem;
-  }
-  /* Los tres sitios caben en fila a partir de 1024. En la franja de dos
-     columnas el tercero quedaría solo: se expande. */
-  @media (min-width: 768px) and (max-width: 1023.98px) {
-    .site-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .site-grid > li:last-child:nth-child(odd) { grid-column: 1 / -1; }
-  }
-  @media (min-width: 1024px) {
-    .site-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
   .site-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    block-size: 100%;
+    display: grid;
+    gap: 1.5rem;
     color: var(--color-text);
     text-decoration: none;
   }
-  /* Chips al pie: con tarjetas de alto igual, la línea de tecnologías cierra
-     las tres a la misma altura. */
-  .site-card .chip-list { margin-top: auto; }
+  @media (min-width: 900px) {
+    .site-card {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      column-gap: clamp(2rem, 1rem + 3vw, 3.5rem);
+      align-items: center;
+    }
+    /* Alternado: la captura cambia de lado en las filas pares. Rompe la
+       monotonía de tres bloques idénticos sin mover el orden del DOM, que es
+       el que leen el teclado y el lector de pantalla. */
+    .site-row:nth-child(even) .browser-card { order: 2; }
+  }
+
+  .site-info {
+    display: grid;
+    gap: 0.875rem;
+    align-content: start;
+  }
 
   .site-name {
     font-family: var(--font-display);
-    font-size: var(--text-xl);
+    font-size: var(--text-2xl);
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.2;
     letter-spacing: -0.01em;
   }
   /* El espacio antes de la flecha lo daba un blanco dentro del texto; con un
@@ -399,65 +481,67 @@ for (const id of anchorIds) {
     margin-inline-start: 0.25em;
   }
 
+  .site-desc { text-wrap: pretty; }
+
+  /* La franja de cifras, apilada: las etiquetas del diccionario son frases
+     largas y en una columna de 5fr dos celdas lado a lado no caben. Una
+     columna conserva el filete de 1 px entre celdas, que es el objeto. */
   .site-stats {
-    display: grid;
-    gap: 0.75rem;
-    border-top: 1px solid var(--color-border);
-    padding-top: 0.875rem;
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 0.25rem;
+  }
+  .site-stats > .stat { padding-inline: 0; }
+
+  /* --- Tarjeta de navegador ---------------------------------------------- */
+
+  /* El dominio se lleva el hueco libre y la acción se va al extremo: la barra
+     dice a la vez QUÉ sitio es y que el enlace SALE fuera, sin esconder nada
+     en un estado de hover. */
+  .browser-url {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .browser-visit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-inline-start: auto;
+    padding-inline-start: 0.75rem;
+    color: var(--color-accent-fg);
+    white-space: nowrap;
   }
 
   /* Marco de captura: 16:10 exacto, que es la proporción nativa de las
-     1440×900, así que `cover` no recorta nada. */
-  .shot {
+     1440×900, así que `cover` no recorta nada y no hay salto de maqueta
+     mientras la imagen viaja. */
+  .browser-frame {
     position: relative;
     aspect-ratio: 16 / 10;
     overflow: hidden;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
     background-color: var(--color-surface-2);
   }
-  /* El <img> lo emite `astro:assets` y no recibe el ámbito del componente. */
-  .shot :global(picture) {
+  /* El <picture> lo emite `astro:assets` y no recibe el ámbito del componente. */
+  .browser-frame :global(picture) {
     display: block;
     block-size: 100%;
   }
-  .shot :global(img) {
-    inline-size: 100%;
-    /* 6 px de más por abajo: al subir la captura en hover no queda hueco y no
-       hace falta escalarla (una captura escalada se ve borrosa). */
-    block-size: calc(100% + 6px);
+  .browser-frame :global(img.browser-shot) {
+    block-size: 100%;
     object-fit: cover;
     object-position: 50% 0;
   }
 
-  /* Flex y no línea corrida: así el icono se centra con la mayúscula de la
-     mono en vez de colgar de la línea base, y la altura de la barra la sigue
-     mandando el renglón de texto (18 px > 16 px del icono), o sea que no
-     crece ni un pixel respecto a la flecha de texto que había antes. */
-  .visit-bar {
-    position: absolute;
-    inset-inline: 0;
-    inset-block-end: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.4375rem 0.75rem;
-    background-color: var(--color-accent-tint);
-    color: var(--color-accent-fg);
-    font-family: var(--font-mono);
-  }
+  /* El filete es lo ÚNICO que se mueve al pasar por encima: el sistema prohíbe
+     inventar elevación, así que no hay sombra ni desplazamiento de la tarjeta.
+     El acercamiento de la captura vive dentro del marco recortado. */
+  .site-card:hover .browser-card,
+  .site-card:focus-visible .browser-card { border-color: var(--color-border-strong); }
 
-  /* Sin puntero fino no hay hover: en táctil y con movimiento reducido la
-     barra está siempre puesta. Nunca se esconde información en un estado. */
   @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    .visit-bar {
-      transform: translateY(100%);
-      transition: transform 240ms var(--ease-out-quint);
+    .browser-frame :global(img.browser-shot) {
+      transition: transform 320ms var(--ease-out-quint);
     }
-    .shot :global(img) { transition: transform 240ms var(--ease-out-quint); }
-    .site-card:hover .visit-bar,
-    .site-card:focus-visible .visit-bar { transform: translateY(0); }
-    .site-card:hover .shot :global(img) { transform: translateY(-6px); }
+    .site-card:hover .browser-frame :global(img.browser-shot) { transform: scale(1.02); }
   }
 </style>
