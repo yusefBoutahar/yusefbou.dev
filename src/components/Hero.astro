@@ -23,16 +23,7 @@ const { hero, githubLabel, linkedinLabel, portrait } = Astro.props;
 <section class="section hero" id={SECTION_IDS.hero} aria-labelledby="hero-title">
   <div class="shell hero-grid">
     <div>
-      <!-- Disponibilidad. El punto de estado nunca informa solo (§2.4.5).
-           `.pill-prose` es el modificador canónico para la píldora de frase:
-           conserva el radio de 999 y compone en Inter, porque el diccionario
-           trae una oración y la mono tiene un tope de tres palabras (§3.2). -->
-      <p class="pill pill-prose" data-reveal>
-        <span class="dot" aria-hidden="true"></span>
-        <span>{hero.availability}</span>
-      </p>
-
-      <div class="mt-8" data-reveal data-reveal-delay="45">
+      <div data-reveal>
         <p class="label">{hero.name}</p>
         <h1 class="hero-title text-4xl mt-4" id="hero-title">{hero.tagline}</h1>
       </div>

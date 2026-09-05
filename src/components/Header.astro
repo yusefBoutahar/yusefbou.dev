@@ -79,7 +79,11 @@ const themeCopy = Object.fromEntries(
     <a class="header-brand" href={localizePath(lang, '/')}>yusefbou.dev</a>
 
     <nav class="header-nav" aria-label={nav.menuLabel}>
-      {links.map((link) => <a class="nav-link" href={link.href}>{link.label}</a>)}
+      {links.map((link) => (
+        <a class="nav-link" href={link.href} data-nav-link={link.href.slice(1)}>
+          {link.label}
+        </a>
+      ))}
     </nav>
 
     <div class="header-actions">
@@ -294,5 +298,45 @@ const themeCopy = Object.fromEntries(
       const next = CYCLE[(CYCLE.indexOf(read()) + 1) % CYCLE.length]!;
       apply(next, true);
     });
+  }
+
+  /* -------------------------------------------------------------------------
+     SECCIÓN ACTIVA EN LA NAVEGACIÓN — mismo patrón que IndexRail.astro: la
+     primera sección visible en orden de documento marca su enlace. Sin JS la
+     navegación se queda inerte, que es correcto: ya funciona como ancla pura.
+     ---------------------------------------------------------------------- */
+  const nav = document.querySelector<HTMLElement>('[data-site-header] .header-nav');
+
+  if (nav && 'IntersectionObserver' in window) {
+    const links = new Map<string, HTMLAnchorElement>();
+    for (const link of nav.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')) {
+      const id = link.dataset.navLink;
+      if (id) links.set(id, link);
+    }
+
+    const targets = [...links.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    const visible = new Set<string>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        }
+        let marked = false;
+        for (const [id, link] of links) {
+          const active = !marked && visible.has(id);
+          if (active) marked = true;
+          if (active) link.setAttribute('aria-current', 'true');
+          else link.removeAttribute('aria-current');
+        }
+      },
+      { rootMargin: '-45% 0px -45% 0px', threshold: 0 },
+    );
+
+    for (const target of targets) observer.observe(target);
   }
 </script>
