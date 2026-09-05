@@ -1,0 +1,934 @@
+/* ============================================================================
+   yusefbou.dev — sistema de diseño «EXPEDIENTE»
+   Tailwind CSS 4 puro (plugin de Vite). SIN tailwind.config.
+   Fuente de verdad: scratchpad/DESIGN.md.
+   Ningún componente escribe un hex: todo pasa por token.
+   Contrastes verificados con scratchpad/contrast.mjs → 72 pares, 0 fallos.
+   ========================================================================= */
+
+@import "tailwindcss";
+
+/* ----------------------------------------------------------------------------
+   1. CAPA CRUDA — los dos temas en una sola declaración por token.
+   `light-dark()` resuelve según el `color-scheme` efectivo de :root.
+   La primera declaración de cada token es la RESERVA para navegadores sin
+   `light-dark()` (Safari 16.4–17.4): se quedan en oscuro, legible y AA.
+   ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* Reserva — modo oscuro plano */
+  --ui-bg: #0A0B0D;
+  --ui-surface: #121418;
+  --ui-surface-2: #1A1D22;
+  --ui-accent-tint: #221C12;
+  --ui-border: #26292F;
+  --ui-border-strong: #383C44;
+  --ui-border-ui: #666B74;
+  --ui-text: #F0F1F3;
+  --ui-text-2: #A6AAB2;
+  --ui-text-3: #868B94;
+  --ui-accent: #E9A23B;
+  --ui-accent-hi: #F5B455;
+  --ui-accent-fg: #E9A23B;
+  --ui-accent-ink: #0A0B0D;
+  --ui-ok: #2FBF71;
+  --ui-edge: rgb(255 255 255 / 0.045);
+  --ui-shadow: transparent;
+  --ui-selection: #3A2C12;
+}
+
+:root {
+  /* Conmutación real — light-dark(claro, oscuro) */
+  --ui-bg:            light-dark(#FBFAF9, #0A0B0D);
+  --ui-surface:       light-dark(#FFFFFF, #121418);
+  --ui-surface-2:     light-dark(#F4F3F1, #1A1D22);
+  --ui-accent-tint:   light-dark(#FBF1DE, #221C12);
+  --ui-border:        light-dark(#E4E2DE, #26292F);
+  --ui-border-strong: light-dark(#C9C6C0, #383C44);
+  --ui-border-ui:     light-dark(#8B8880, #666B74);
+  --ui-text:          light-dark(#14161A, #F0F1F3);
+  --ui-text-2:        light-dark(#56595F, #A6AAB2);
+  --ui-text-3:        light-dark(#64676E, #868B94);
+  --ui-accent:        light-dark(#E9A23B, #E9A23B); /* SOLO relleno */
+  --ui-accent-hi:     light-dark(#D8912B, #F5B455);
+  --ui-accent-fg:     light-dark(#8A5313, #E9A23B); /* texto y marcas */
+  --ui-accent-ink:    light-dark(#14161A, #0A0B0D);
+  --ui-ok:            light-dark(#0F7A3D, #2FBF71);
+  --ui-edge:          light-dark(rgb(255 255 255 / 0.90), rgb(255 255 255 / 0.045));
+  --ui-shadow:        light-dark(rgb(16 18 22 / 0.10), transparent);
+  --ui-selection:     light-dark(#FBF1DE, #3A2C12);
+}
+
+/* Conmutador de tres estados: atributo ausente = lo que diga el sistema.
+   Forzar un tema solo cambia `color-scheme`; los tokens se recalculan solos. */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+/* ----------------------------------------------------------------------------
+   2. @theme inline — expone la capa cruda como utilidades de Tailwind.
+   `inline` es obligatorio porque los valores son `var(...)`: sin él, la
+   resolución de la variable queda atada al ámbito equivocado.
+   ------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-bg:            var(--ui-bg);
+  --color-surface:       var(--ui-surface);
+  --color-surface-2:     var(--ui-surface-2);
+  --color-accent-tint:   var(--ui-accent-tint);
+  --color-border:        var(--ui-border);
+  --color-border-strong: var(--ui-border-strong);
+  --color-border-ui:     var(--ui-border-ui);
+  --color-text:          var(--ui-text);
+  --color-text-2:        var(--ui-text-2);
+  --color-text-3:        var(--ui-text-3);
+  --color-accent:        var(--ui-accent);
+  --color-accent-hi:     var(--ui-accent-hi);
+  --color-accent-fg:     var(--ui-accent-fg);
+  --color-accent-ink:    var(--ui-accent-ink);
+  --color-ok:            var(--ui-ok);
+}
+
+@theme {
+  /* Familias tipográficas — variables, autoalojadas con @fontsource-variable */
+  --font-display: "Source Serif 4 Variable", "Source Serif Fallback", Georgia, "Times New Roman", serif;
+  --font-sans:    "Inter Variable", "Inter Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:    "JetBrains Mono Variable", ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+
+  /* Escala tipográfica fluida — 360 px → 1440 px, raíz 16 px.
+     Cada paso lleva su interlineado y su tracking: `text-3xl` ya viene compuesto. */
+  --text-2xs: clamp(0.6875rem, 0.667rem + 0.09vw, 0.75rem);      /* 11 → 12 */
+  --text-2xs--line-height: 1.2;
+  --text-2xs--letter-spacing: 0.09em;
+
+  --text-xs: clamp(0.75rem, 0.729rem + 0.09vw, 0.8125rem);       /* 12 → 13 */
+  --text-xs--line-height: 1.45;
+  --text-xs--letter-spacing: 0.01em;
+
+  --text-sm: clamp(0.875rem, 0.854rem + 0.09vw, 0.9375rem);      /* 14 → 15 */
+  --text-sm--line-height: 1.55;
+
+  --text-base: clamp(1rem, 0.979rem + 0.09vw, 1.0625rem);        /* 16 → 17 */
+  --text-base--line-height: 1.65;
+
+  --text-lg: clamp(1.125rem, 1.083rem + 0.19vw, 1.25rem);        /* 18 → 20 */
+  --text-lg--line-height: 1.55;
+
+  --text-xl: clamp(1.25rem, 1.167rem + 0.37vw, 1.5rem);          /* 20 → 24 */
+  --text-xl--line-height: 1.25;
+  --text-xl--letter-spacing: -0.01em;
+
+  --text-2xl: clamp(1.5rem, 1.333rem + 0.74vw, 2rem);            /* 24 → 32 */
+  --text-2xl--line-height: 1.15;
+  --text-2xl--letter-spacing: -0.02em;
+
+  --text-3xl: clamp(1.875rem, 1.583rem + 1.30vw, 2.75rem);       /* 30 → 44 */
+  --text-3xl--line-height: 1.08;
+  --text-3xl--letter-spacing: -0.025em;
+
+  --text-4xl: clamp(2.5rem, 1.833rem + 2.96vw, 4.5rem);          /* 40 → 72 */
+  --text-4xl--line-height: 1.02;
+  --text-4xl--letter-spacing: -0.03em;
+
+  /* Anchos máximos → utilidades `max-w-*` */
+  --container-prose:   68ch;
+  --container-narrow:  45rem;
+  --container-content: 70rem;
+  --container-wide:    80rem;
+  --container-shell:   90rem;
+
+  /* Radios — techo de 20 px a propósito: el radio grande es la firma de la plantilla */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Curvas */
+  --ease-out-quint: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-soft:      cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Sombras, duraciones y ritmo: propiedades planas.
+   No son espacios de nombres de Tailwind y no generan utilidades a propósito. */
+:root {
+  --shadow-sm: 0 1px 2px var(--ui-shadow);
+  --shadow-md: 0 2px 4px var(--ui-shadow), 0 8px 20px -8px var(--ui-shadow);
+  --shadow-lg: 0 16px 40px -14px var(--ui-shadow);
+  --edge: inset 0 1px 0 var(--ui-edge);
+
+  --dur-micro: 120ms;
+  --dur-state: 180ms;
+  --dur-enter: 320ms;
+  --dur-hero:  420ms;
+
+  --space-section: clamp(4.5rem, 3.33rem + 5.19vw, 8rem);  /* 72 → 128 */
+  --gutter:        clamp(1.25rem, 4vw, 3rem);              /* 20 → 48 */
+  --header-h:      3.5rem;                                 /* 56 px */
+  --rail-w:        2.25rem;                                /* 36 px — caja fija de la cinta */
+  --rail-air:      2rem;                                   /* 32 px — aire hasta el texto */
+  --measure-h1:    30ch;                                   /* techo de medida del h1 */
+}
+
+/* ----------------------------------------------------------------------------
+   3. MÉTRICAS DE RESERVA — evitan el salto al intercambiar la fuente (CLS 0).
+   Valores de partida: recalibrar contra los woff2 reales antes de publicar.
+   ------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 107.12%;
+  ascent-override: 90.49%;
+  descent-override: 22.56%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Source Serif Fallback";
+  src: local("Georgia");
+  size-adjust: 100.2%;
+  ascent-override: 96.7%;
+  descent-override: 32.5%;
+  line-gap-override: 0%;
+}
+
+/* ----------------------------------------------------------------------------
+   4. BASE
+   ------------------------------------------------------------------------- */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-h) + 1.5rem);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    color: var(--color-text);
+    text-wrap: balance;
+  }
+
+  p { text-wrap: pretty; }
+
+  /* Toda cifra alinea en columna, siempre. */
+  th, td, time, .num, [data-num] { font-variant-numeric: tabular-nums; }
+
+  ::selection {
+    background-color: var(--ui-selection);
+    color: var(--color-text);
+  }
+
+  /* Un solo foco para todo el sitio. El anillo aparece instantáneo. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-fg);
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
+  :focus:not(:focus-visible) { outline: none; }
+
+  img, svg, video { display: block; max-width: 100%; height: auto; }
+}
+
+/* ----------------------------------------------------------------------------
+   5. COMPONENTES CANÓNICOS
+   Los únicos patrones repetidos del sitio. Si un componente necesita algo que
+   no está aquí, se añade AQUÍ primero — no se improvisa en la plantilla.
+   ------------------------------------------------------------------------- */
+
+@layer components {
+
+  /* --- Estructura ------------------------------------------------------- */
+
+  .shell {
+    width: 100%;
+    max-width: var(--container-shell);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .section {
+    padding-block: var(--space-section);
+    border-top: 1px solid var(--color-border);
+  }
+  .section:first-of-type { border-top: 0; }
+
+  /* Ritmo fijo de DESIGN §4.3: del bloque de encabezado al contenido van 48 px.
+     Vive aquí y no en cada plantilla: siete secciones repitiendo `mt-12` es
+     exactamente como el ritmo vertical se desvía cuando lo tocan varias manos. */
+  .section-head {
+    max-width: var(--container-prose);
+    margin-bottom: 3rem;
+  }
+
+  /* `01 · EXPERIENCIA` — el cintillo mono que abre toda sección. */
+  .section-kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1.2;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-text-3);
+    margin-bottom: 1rem;
+  }
+  .section-kicker::before {
+    content: "";
+    inline-size: 1.5rem;
+    block-size: 2px;
+    background-color: var(--color-accent-fg);
+    flex: none;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .section-lead {
+    margin-top: 0.75rem;
+    max-width: var(--container-prose);
+    font-size: var(--text-lg);
+    color: var(--color-text-2);
+  }
+  /* Ritmo fijo: entradilla → contenido son 48 px. No se negocia por sección. */
+  .section-lead + * { margin-top: 3rem; }
+
+  /* El respiro deliberado: docencia y formación sobre --surface a sangre.
+     Es el único cambio de fondo de toda la página. */
+  .section-surface { background-color: var(--color-surface); }
+  .section-surface .stat-band > * { background-color: var(--color-surface); }
+
+  .measure { max-width: var(--container-prose); }
+
+  .rule { border: 0; border-top: 1px solid var(--color-border); }
+
+  /* --- Tarjeta ---------------------------------------------------------- */
+
+  .card {
+    position: relative;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--edge), var(--shadow-sm);
+    transition:
+      border-color var(--dur-micro) var(--ease-out-quint),
+      box-shadow   var(--dur-state) var(--ease-out-quint),
+      transform    var(--dur-state) var(--ease-out-quint);
+  }
+  @media (min-width: 768px) { .card { padding: 2rem; } }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover {
+      border-color: var(--color-border-strong);
+      box-shadow: var(--edge), var(--shadow-md);
+      transform: translateY(-2px);
+    }
+  }
+  .card:focus-within {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--edge), var(--shadow-md);
+  }
+
+  /* El elemento que manda: puesto actual, caso destacado. */
+  .card-current {
+    border-left: 2px solid var(--color-accent-fg);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+
+  /* --- Etiquetas y píldoras --------------------------------------------- */
+
+  /* Chip de tecnología. Nunca lleva icono ni color de marca. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background-color: var(--color-surface-2);
+    color: var(--color-text-2);
+    border-radius: var(--radius-xs);
+    padding: 0.1875rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.45;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  /* Segmento de versión: `LangGraph │ 1.0`. La versión prueba que la lista es real. */
+  .chip-version {
+    margin-left: 0.125rem;
+    padding-left: 0.375rem;
+    border-left: 1px solid var(--color-border-strong);
+    color: var(--color-text-3);
+  }
+  .chip-list { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+
+  /* Micro-etiqueta mono en versalitas: PROBLEMA / ENFOQUE / RESULTADO, kickers. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1.2;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-text-3);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-2);
+  }
+  .pill-accent {
+    background-color: var(--color-accent-tint);
+    border-color: transparent;
+    color: var(--color-accent-fg);
+  }
+  /* Píldora de frase. La de disponibilidad conserva el radio de 999 —§4.4 se lo
+     reserva justo a ella— pero su texto es una oración de quince palabras y la
+     mono tiene un techo duro de tres (§3.2): se compone en Inter, y el punto de
+     estado se alinea con la primera línea cuando el texto envuelve. */
+  .pill-prose {
+    align-items: flex-start;
+    max-width: 46ch;
+    padding: 0.5rem 1rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    letter-spacing: 0;
+  }
+  .pill-prose .dot { margin-block-start: 0.5em; }
+
+  /* Punto de estado. SIEMPRE acompañado de su etiqueta de texto. */
+  .dot {
+    inline-size: 0.4375rem;
+    block-size: 0.4375rem;
+    border-radius: 999px;
+    background-color: var(--color-ok);
+    flex: none;
+  }
+
+  /* --- Métricas --------------------------------------------------------- */
+
+  /* Celda de cifra. Una sola anatomía en todo el sitio: `<dt>` con la etiqueta y
+     `<dd>` con el valor —el orden que exige una lista de definición y el que lee
+     un lector de pantalla— invertidos visualmente para que la cifra quede arriba.
+     `flex-end` es el extremo superior del eje invertido: alinea las cifras de una
+     franja aunque las etiquetas ocupen distinto número de líneas. */
+  .stat {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+  }
+
+  /* Dentro de una franja, cada celda toma prestadas las dos filas de la rejilla
+     madre: todos los valores comparten la primera y todas las etiquetas la
+     segunda. Así la franja no se descuadra cuando un valor que es frase corta
+     —«4 años y 1 mes», «4 years and 1 month»— envuelve a dos o tres renglones
+     y sus vecinos no. Sin subrejilla se conserva el apilado en columna. */
+  @supports (grid-template-rows: subgrid) {
+    .stat-band .stat {
+      display: grid;
+      grid-template-rows: subgrid;
+      grid-row: span 2;
+    }
+    .stat-band .stat-value { grid-row: 1; }
+    .stat-band .stat-label { grid-row: 2; }
+  }
+
+  .stat-value {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xl);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+    /* `pretty`, no `balance`. Con `balance` los valores que son frase corta
+       («4 años y 1 mes», «4 years and 1 month») se reparten en TRES renglones
+       equilibrados en cuanto la celda estrecha; `pretty` corta por donde toca
+       y solo evita la palabra huérfana en la última línea. */
+    text-wrap: pretty;
+  }
+  .stat-label {
+    display: block;
+    margin-top: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1.2;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-text-3);
+  }
+  /* Franja de cifras: celdas separadas por filete vertical de 1 px. */
+  .stat-band {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background-color: var(--color-border);
+    border-block: 1px solid var(--color-border);
+  }
+  .stat-band > * { background-color: var(--color-bg); padding: 1rem 1.25rem; }
+  @media (min-width: 768px) {
+    .stat-band { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  /* --- Botones ---------------------------------------------------------- */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-block-size: 2.75rem;         /* 44 px — objetivo táctil */
+    padding: 0.625rem 1.125rem;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-micro) var(--ease-out-quint),
+      border-color     var(--dur-micro) var(--ease-out-quint),
+      color            var(--dur-micro) var(--ease-out-quint);
+  }
+
+  /* El ámbar SOLO existe como relleno, con `--color-accent-ink` encima.
+     El borde de 1 px le da un límite verificable de 6.05:1 en claro,
+     donde el relleno contra el papel solo llega a 2.08:1. */
+  .btn-primary {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent-fg);
+    color: var(--color-accent-ink);
+  }
+  .btn-primary:hover { background-color: var(--color-accent-hi); }
+
+  .btn-secondary {
+    background-color: transparent;
+    border-color: var(--color-border-ui);
+    color: var(--color-text);
+  }
+  .btn-secondary:hover {
+    background-color: var(--color-surface-2);
+    border-color: var(--color-text-3);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--color-text-2);
+    padding-inline: 0.5rem;
+  }
+  .btn-ghost:hover { color: var(--color-text); }
+
+  /* --- Enlaces ---------------------------------------------------------- */
+
+  /* Enlace en prosa: subrayado que crece desde la izquierda. Único adorno. */
+  .link {
+    color: var(--color-accent-fg);
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: background-size var(--dur-state) var(--ease-out-quint);
+  }
+  .link:hover, .link:focus-visible { background-size: 100% 1px; }
+
+  /* --- Hero -------------------------------------------------------------- */
+
+  /* Nunca 100vh: en móvil la barra del navegador lo convierte en un salto. */
+  .hero {
+    display: flex;
+    align-items: center;
+    min-block-size: min(88vh, 780px);
+    padding-block: clamp(2.5rem, 1.5rem + 4.5vw, 5rem);
+  }
+  /* En móvil se apila y la foto va DEBAJO del titular: el h1 es el LCP. */
+  .hero-grid {
+    display: grid;
+    gap: 2.5rem;
+    inline-size: 100%;
+  }
+  @media (min-width: 900px) {
+    .hero-grid {
+      grid-template-columns: 2fr 1fr;
+      align-items: center;
+      gap: 3rem;
+    }
+  }
+
+  /* El titular es la promesa (§6.1) y se compone en DOS renglones.
+     El TAMAÑO no se toca y no se puede tocar: §3.1 fija `text-4xl` en
+     40 → 72 px y §9.1 es explícito —«si no cabe, se recorta el hero; NO se
+     encoge la letra»—. Así que el número de renglones lo deciden la medida y
+     la longitud del titular, no el cuerpo de la letra.
+     Medida: la de un display es la mitad de la de un párrafo. `--measure-h1`
+     es el techo, en caracteres; a 72 px son ~1.145 px, muy por encima de los
+     864 px que le da hoy la columna `2fr` del hero (22,7ch), así que no
+     muerde: está para que el titular no se estire nunca más allá de lo
+     legible si la retícula del hero cambia. A 22,7ch de medida, dos renglones
+     son ~53 caracteres: ese, y no el CSS, es el presupuesto del diccionario.
+     `balance` reparte los renglones a partes iguales sin añadir ninguno. */
+  .hero-title {
+    max-inline-size: var(--measure-h1);
+    text-wrap: balance;
+  }
+  /* Red de seguridad, y es tipografía pura, no maqueta: desde 1280 el titular
+     —y SOLO el titular— puede invadir el hueco de 3rem que la rejilla del hero
+     deja entre la columna de texto y la de la foto. Ese hueco está vacío por
+     definición y la placa tiene 187 px de aire a su izquierda a 1280, así que
+     no hay colisión posible.
+     Con `text-wrap: balance` el ancho de la caja es invisible mientras el
+     número de renglones no cambie —los dos renglones se reparten igual en 864
+     que en 912 px—, así que esto no mueve un pixel del hero salvo en el único
+     caso en que importa: el titular que se pasa por poco del presupuesto y
+     caería a tres renglones. Sube el presupuesto de 47 a 52 caracteres sin
+     tocar ni el cuerpo de la letra ni la retícula. */
+  @media (min-width: 1280px) {
+    .hero-title { margin-inline-end: -3rem; }
+  }
+
+  /* Placa rectangular: borde de 1 px y nada más. Sin sombra, sin máscara,
+     sin duotono, nunca circular. Si la foto no aguanta desnuda, es la foto. */
+  .portrait-plate {
+    inline-size: 100%;
+    max-inline-size: 15rem;          /* 240 px */
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .portrait-plate img { filter: saturate(0.94) contrast(1.02); }
+
+  /* Cargo · empresa. Por debajo del umbral de una sola columna la línea no
+     cabe entera y el renglón siguiente empezaría por el punto medio, que se
+     lee como una viñeta. Se apila y se quita el separador. */
+  @media (max-width: 767px) {
+    .hero-role-org { display: block; }
+    .hero-role-sep { display: none; }
+  }
+
+  /* --- Cabecera persistente --------------------------------------------- */
+
+  /* El filete inferior NO existe hasta que hay 16 px de scroll (.is-scrolled):
+     así el hero arranca sin caja. Solo se anima el color del borde. */
+  .site-header {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 50;
+    background-color: color-mix(in oklab, var(--color-bg) 82%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid transparent;
+    transition:
+      border-color     200ms var(--ease-soft),
+      background-color 200ms var(--ease-soft);
+  }
+  .site-header.is-scrolled { border-bottom-color: var(--color-border); }
+
+  .header-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    block-size: var(--header-h);
+  }
+
+  .header-brand {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.01em;
+    color: var(--color-text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* Navegación central: solo desde 900 px. Por debajo, Contacto + CV. */
+  .header-nav { display: none; }
+  @media (min-width: 900px) {
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-inline: auto;
+    }
+  }
+
+  /* Mismo subrayado que .link, pero en color de interfaz: la navegación no
+     gasta acento — el acento solo señala. */
+  .nav-link {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-2);
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition:
+      background-size var(--dur-state) var(--ease-out-quint),
+      color           var(--dur-micro) var(--ease-out-quint);
+  }
+  .nav-link:hover,
+  .nav-link:focus-visible {
+    color: var(--color-text);
+    background-size: 100% 1px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-inline-start: auto;
+  }
+  @media (min-width: 900px) { .header-actions { margin-inline-start: 0; } }
+
+  /* ES · EN: dos enlaces reales, sin JS. El idioma activo enlaza a su propia
+     página y se marca con aria-current; no se desactiva. */
+  .lang-switch {
+    display: flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-3);
+  }
+  .lang-switch a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.25rem;
+    padding-inline: 0.375rem;
+    color: var(--color-text-3);
+    text-decoration: none;
+    border-radius: var(--radius-xs);
+    transition: color var(--dur-micro) var(--ease-out-quint);
+  }
+  .lang-switch a:hover { color: var(--color-text); }
+  .lang-switch a[aria-current="page"] { color: var(--color-text); }
+  .lang-switch .lang-sep { color: var(--color-border-strong); }
+
+  /* --- Cinta de índice (>= 1536 px) -------------------------------------- */
+
+  /* Vive en la franja vacía que queda a la IZQUIERDA del texto, y esa franja
+     mide el margen muerto del shell —`(100vw - 90rem) / 2`, que es CERO hasta
+     los 1440— más el propio `--gutter`. Con el umbral en 1280 la franja era
+     solo el gutter de 48 px y la cinta acababa a 9 px de la primera letra del
+     h1: no es margen muerto, es el aire del contenido. Desde 1536 el margen
+     muerto existe (48 px y subiendo) y la franja da de sí.
+     La colocación se ancla al TEXTO, no a la ventana: el borde derecho de la
+     cinta queda siempre a `--rail-air` de la primera letra, así la relación
+     óptica es la misma a 1536 que a 1920. `aria-hidden`: es exactamente
+     redundante con la navegación de cabecera. */
+  .index-rail { display: none; }
+  @media (min-width: 1536px) {
+    .index-rail {
+      display: block;
+      position: fixed;
+      inset-block-start: 50%;
+      transform: translateY(-50%);
+      inline-size: var(--rail-w);
+      inset-inline-start: calc(
+        max(0px, (100vw - var(--container-shell)) / 2)
+        + var(--gutter) - var(--rail-air) - var(--rail-w)
+      );
+      z-index: 40;
+      pointer-events: none;
+    }
+  }
+  .index-rail ol {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .index-rail li {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1.2;
+    letter-spacing: 0.09em;
+    color: var(--color-text-3);
+    transition: color 200ms var(--ease-soft);
+  }
+  /* El tramo no cambia de tamaño ni de sitio: solo de color. */
+  .index-rail .rail-tick {
+    inline-size: 0.625rem;
+    block-size: 1px;
+    background-color: var(--color-border-strong);
+    transition: background-color 200ms var(--ease-soft);
+  }
+  .index-rail li[data-active="true"] { color: var(--color-text); }
+  .index-rail li[data-active="true"] .rail-tick { background-color: var(--color-accent-fg); }
+
+  /* --- Pie --------------------------------------------------------------- */
+
+  .site-footer {
+    border-top: 1px solid var(--color-border);
+    padding-block: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    color: var(--color-text-3);
+  }
+  .footer-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  /* Conmutador de tema de tres estados. El estado se comunica con texto y con
+     aria-checked, nunca solo con color. */
+  .theme-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+  }
+  .theme-switch button {
+    appearance: none;
+    background-color: transparent;
+    border: 0;
+    border-radius: 999px;
+    min-block-size: 2.25rem;
+    padding-inline: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    line-height: 1.2;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-text-3);
+    cursor: pointer;
+    transition:
+      background-color var(--dur-micro) var(--ease-out-quint),
+      color            var(--dur-micro) var(--ease-out-quint);
+  }
+  .theme-switch button:hover { color: var(--color-text); }
+  .theme-switch button[aria-checked="true"] {
+    background-color: var(--color-surface-2);
+    color: var(--color-text);
+  }
+
+  /* --- Accesibilidad ---------------------------------------------------- */
+
+  .skip-link {
+    position: absolute;
+    left: 0.5rem;
+    top: -100%;
+    z-index: 100;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-ui);
+    border-radius: var(--radius-sm);
+    padding: 0.625rem 1rem;
+    font-size: var(--text-sm);
+  }
+  .skip-link:focus { top: 0.5rem; }
+}
+
+/* ----------------------------------------------------------------------------
+   6. MOVIMIENTO
+   El contenido es visible por defecto en el HTML. El estado inicial de la
+   animación SOLO se aplica si el script en línea del <head> pone
+   data-anim="on" en <html> tras comprobar que hay JS y que no hay
+   `prefers-reduced-motion`. Si el JS falla, la página se ve entera.
+   Nunca al revés.
+   ------------------------------------------------------------------------- */
+
+:root[data-anim="on"] [data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity   var(--dur-enter) var(--ease-out-quint),
+    transform var(--dur-enter) var(--ease-out-quint);
+}
+:root[data-anim="on"] [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Cambio de tema sin transición: se añade .theming a <html>, se cambia el
+   atributo, un requestAnimationFrame, y se retira. Coste percibido: 0 ms. */
+:root.theming,
+:root.theming *,
+:root.theming *::before,
+:root.theming *::after { transition: none !important; }
+
+/* Esqueleto de carga de captura — convención heredada de tacosfrancos. */
+@keyframes sk-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.sk-wrap { position: relative; }
+.sk-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: inherit;
+  background: linear-gradient(90deg,
+    var(--color-surface) 25%,
+    var(--color-surface-2) 50%,
+    var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.sk-wrap.sk-done::after { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Paridad de contenido: nada vive solo dentro de una animación. */
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+  .sk-wrap::after { animation: none; }
+}
+
+/* ----------------------------------------------------------------------------
+   7. IMPRESIÓN — un reclutador imprime.
+   ------------------------------------------------------------------------- */
+
+@media print {
+  :root { color-scheme: light; }
+  body { background: #fff; color: #000; }
+  .site-header, .theme-switch, .index-rail, .skip-link { display: none !important; }
+  .section { border-top: 1px solid #ccc; padding-block: 1.5rem; }
+  .card { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.75em; }
+}

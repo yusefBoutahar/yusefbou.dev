@@ -1,0 +1,86 @@
+---
+/* ============================================================================
+   Icon.astro — el único componente de icono del sitio.
+
+   CÓMO SE USA
+   -----------
+     import Icon from '../components/Icon.astro';
+     import type { IconName } from '../components/icons';   // solo si hace falta
+     // El tipo NO sale de Icon.astro: un .astro solo exporta el componente.
+
+     <Icon name="download" />                     · 20 px, hereda el color
+     <Icon name="github" size={16} />             · junto a texto mono
+     <Icon name="arrow-up-right" class="text-text-3" />
+     <Icon name="play-circle" size={24} title="Ver el vídeo en YouTube" />
+
+   El icono ACOMPAÑA a un texto, así que por defecto es decorativo:
+   `aria-hidden="true"` + `focusable="false"`. Un lector de pantalla que lea
+   «descargar descargar CV» es peor que uno que no lea nada.
+   Solo cuando el icono va SOLO —un botón sin etiqueta visible— se pasa
+   `title`: entonces el svg toma `role="img"` y un <title> con ese texto, que
+   es la única forma correcta de darle nombre accesible a un SVG en línea.
+   Con `title` NO se pone además `aria-label` en el botón: se duplicaría.
+
+   POR QUÉ LAS MARCAS SON SÓLIDAS Y LAS DEMÁS DE TRAZO
+   ---------------------------------------------------
+   Los iconos de interfaz son dibujo de línea a 1,5 px porque tienen que pesar
+   ópticamente lo mismo que el texto de al lado; un icono relleno junto a Inter
+   400 se lee como una mancha. Los logotipos de GitHub, LinkedIn y YouTube no
+   admiten ese trato: son formas cerradas con proporciones registradas y
+   redibujarlas a trazo deja de ser el logo. Van con los trazados oficiales,
+   `fill="currentColor"` y sin trazo. Es la única excepción del set, y es
+   deliberada — no es que se hayan colado de otra familia.
+
+   Sin librerías, sin CDN, sin fuentes de iconos: SVG en línea. La CSP del
+   sitio no permite un tercero y este sitio no tiene ninguno.
+   ========================================================================= */
+import { ICONS, type IconName } from './icons';
+
+interface Props {
+  /** Nombre del set. Uno inexistente es error de compilación. */
+  name: IconName;
+  /** Lado en px sobre la rejilla de 24 × 24. 16 · 20 · 24 son los del sitio. */
+  size?: number;
+  class?: string;
+  /** Solo si el icono va SIN texto al lado: le da nombre accesible. */
+  title?: string;
+}
+
+const { name, size = 20, class: className, title } = Astro.props;
+
+const icon = ICONS[name];
+const isBrand = icon.kind === 'brand';
+// Cadena vacía = decorativo: evita un <title> en blanco, que es peor que nada.
+const labelled = typeof title === 'string' && title.trim().length > 0;
+---
+
+<svg
+  class={className}
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width={size}
+  height={size}
+  fill={isBrand ? 'currentColor' : 'none'}
+  stroke={isBrand ? undefined : 'currentColor'}
+  stroke-width={isBrand ? undefined : 1.5}
+  stroke-linecap={isBrand ? undefined : 'round'}
+  stroke-linejoin={isBrand ? undefined : 'round'}
+  role={labelled ? 'img' : undefined}
+  aria-hidden={labelled ? undefined : 'true'}
+  focusable="false"
+>
+  {labelled && <title>{title}</title>}
+  <Fragment set:html={icon.body} />
+</svg>
+
+<style>
+  /* La base del sitio pone `svg { display: block }`, que dentro de una línea de
+     texto rompe el renglón. El icono es tipografía: se comporta como una letra
+     y se asienta sobre la línea base. Dentro de un flex —`.btn`, por ejemplo—
+     el navegador lo bloquea igualmente y `flex: none` impide que lo aplaste. */
+  svg {
+    display: inline-block;
+    flex: none;
+    vertical-align: -0.125em;
+  }
+</style>

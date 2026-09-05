@@ -1,0 +1,463 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+
+import type { Lang, SiteContent } from '../i18n/types';
+import { SECTION_IDS, SECTION_INDEX } from '../i18n/utils';
+import { revealDelay, splitVersion } from '../lib/format';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+  work: SiteContent['work'];
+  /** Capturas 1440×900 indexadas por `SiteProject.shot` (`qahwa`, …). */
+  shots: Record<string, ImageMetadata>;
+}
+
+const { work, shots } = Astro.props;
+
+/** Chips visibles por tarjeta (DESIGN §6.4). El resto se resume en `+N`. */
+const MAX_CHIPS = 6;
+
+/**
+ * Anclas profundas. Los cinco `id` de caso y los tres de sitio son direcciones
+ * públicas: se citan desde LinkedIn y desde el CV, así que un `id` duplicado o
+ * que choque con una sección no es un detalle estético, es un enlace roto que
+ * nadie ve romperse. Se comprueba en construcción y la build se cae.
+ */
+const siteAnchorId = (shot: string) => `work-site-${shot}`;
+
+const anchorIds = [
+  ...work.caseStudies.map((study) => study.id),
+  ...work.sites.map((site) => siteAnchorId(site.shot)),
+];
+const reservedIds = new Set<string>(Object.values(SECTION_IDS));
+const seenIds = new Set<string>();
+
+for (const id of anchorIds) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
+    throw new Error(`Work.astro: el ancla "${id}" no es un identificador de URL válido.`);
+  }
+  if (reservedIds.has(id)) {
+    throw new Error(`Work.astro: el ancla "${id}" choca con un id de sección de SECTION_IDS.`);
+  }
+  if (seenIds.has(id)) {
+    throw new Error(`Work.astro: el ancla "${id}" está duplicada en el diccionario.`);
+  }
+  seenIds.add(id);
+}
+---
+
+<section class="section" id={SECTION_IDS.work} aria-labelledby="work-title">
+  <div class="shell">
+    <header class="section-head" data-reveal>
+      <p class="section-kicker">
+        <span><span data-num>{SECTION_INDEX.work}</span> · {work.title}</span>
+      </p>
+      <h2 class="section-title" id="work-title">{work.title}</h2>
+      <p class="section-lead">{work.lead}</p>
+    </header>
+
+    <!-- El NDA se declara UNA vez y arriba: repetido en cada tarjeta parecería
+         una excusa; una sola vez, profesionalidad. -->
+    <p class="work-note measure text-sm text-text-3" data-reveal>{work.confidentialityNote}</p>
+
+    <ol class="case-grid max-w-wide">
+      {
+        work.caseStudies.map((study, i) => {
+          const chips = study.tech.slice(0, MAX_CHIPS).map(splitVersion);
+          const extra = study.tech.slice(MAX_CHIPS);
+          // El trío PROBLEMA/ENFOQUE/RESULTADO es el formato de un documento de
+          // decisión técnica: comunica cómo escribe quien firma antes de leerlo.
+          const rows: [string, string][] = [
+            [work.problemLabel, study.problem],
+            [work.approachLabel, study.approach],
+            [work.resultLabel, study.result],
+          ];
+
+          return (
+            <li
+              class:list={['case-cell', i === 0 && 'case-cell-wide']}
+              id={study.id}
+              data-reveal
+              data-reveal-delay={revealDelay(i)}
+            >
+              <div class:list={['card', 'case-card', i === 0 && 'card-current case-featured']}>
+                <p class="case-kicker label">
+                  <span class="case-num" data-num>{String(i + 1).padStart(2, '0')}</span> · {study.kicker}
+                </p>
+                <h3 class:list={['case-title', i === 0 ? 'text-3xl' : 'text-2xl']}>{study.title}</h3>
+
+                <div class="case-body">
+                  <dl class="case-trio">
+                    {rows.map(([label, body]) => (
+                      <div class="case-row">
+                        <dt class="label">{label}</dt>
+                        <dd class="measure text-sm text-text-2">{body}</dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  <div class="case-aside">
+                    {study.metrics && study.metrics.length > 0 && (
+                      <dl class="stat-band case-stats">
+                        {study.metrics.map((metric) => (
+                          <div class="stat">
+                            <dt class="stat-label">{metric.label}</dt>
+                            <dd class="stat-value">{metric.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+
+                    <ul class="chip-list">
+                      {chips.map(({ name, version }) => (
+                        <li class="chip">
+                          {name}
+                          {version && <span class="chip-version">{version}</span>}
+                        </li>
+                      ))}
+                      {extra.length > 0 && (
+                        <li class="chip chip-more" title={extra.join(' · ')} aria-label={extra.join(', ')}>
+                          +{extra.length}
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </li>
+          );
+        })
+      }
+    </ol>
+
+    <div class="sites">
+      <header class="sites-head measure" data-reveal>
+        <h3 class="sites-title text-2xl" id="work-sites-title">{work.sitesTitle}</h3>
+        <p class="sites-lead text-base text-text-2">{work.sitesLead}</p>
+      </header>
+
+      <ul class="site-grid max-w-wide">
+        {
+          work.sites.map((site, i) => {
+            const shot = shots[site.shot];
+            const id = siteAnchorId(site.shot);
+
+            return (
+              <li id={id} data-reveal data-reveal-delay={revealDelay(i)}>
+                {/* Toda la tarjeta enlaza al sitio VIVO, nunca al repositorio.
+                    El nombre accesible sale del título más la acción, los dos
+                    del diccionario; el resto del contenido sigue leyéndose. */}
+                <a
+                  class="card site-card"
+                  href={site.url}
+                  target="_blank"
+                  rel="noopener"
+                  aria-labelledby={`${id}-name ${id}-visit`}
+                >
+                  <div class="shot" data-shot-frame>
+                    {shot && (
+                      <Picture
+                        src={shot}
+                        alt={site.shotAlt}
+                        formats={['avif', 'webp']}
+                        fallbackFormat="jpeg"
+                        width={720}
+                        height={450}
+                        widths={[360, 540, 720, 1080]}
+                        sizes="(min-width: 1280px) 360px, (min-width: 1024px) 30vw, (min-width: 768px) 44vw, 90vw"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )}
+                    {/* Las dos flechas de texto de la tarjeta se convierten en
+                        icono; no se añade ninguna marca nueva. La barra dice
+                        que el destino es EXTERNO (`external-link`) y el título
+                        conserva su flecha ámbar, ahora dibujada
+                        (`arrow-up-right`). Los dos son decorativos: el nombre
+                        accesible del enlace lo componen `aria-labelledby` con
+                        el título y la etiqueta «Visitar el sitio». */}
+                    <span class="visit-bar text-xs" id={`${id}-visit`}>
+                      {work.visitLabel}<Icon name="external-link" size={16} />
+                    </span>
+                  </div>
+
+                  <h4 class="site-name" id={`${id}-name`}>
+                    {site.name}<span class="site-arrow"><Icon name="arrow-up-right" size={16} /></span>
+                  </h4>
+                  <p class="site-desc text-sm text-text-2">{site.description}</p>
+
+                  <dl class="site-stats">
+                    {site.metrics.map((metric) => (
+                      <div class="stat">
+                        <dt class="stat-label">{metric.label}</dt>
+                        <dd class="stat-value">{metric.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  <ul class="chip-list">
+                    {site.tech.slice(0, MAX_CHIPS).map(splitVersion).map(({ name, version }) => (
+                      <li class="chip">
+                        {name}
+                        {version && <span class="chip-version">{version}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  /**
+   * El esqueleto de carga SOLO existe si hay JS. Si la clase estuviera en el
+   * marcado, sin JS el brillo taparía la captura para siempre: la regla de
+   * robustez de DESIGN §7 se aplica también aquí, invertida.
+   */
+  for (const frame of document.querySelectorAll<HTMLElement>('[data-shot-frame]')) {
+    const img = frame.querySelector('img');
+    if (!img || img.complete) continue;
+    frame.classList.add('sk-wrap');
+    const done = () => frame.classList.add('sk-done');
+    img.addEventListener('load', done, { once: true });
+    img.addEventListener('error', done, { once: true });
+  }
+</script>
+
+<style>
+  /* Maqueta propia de la sección 03. Todo sale de tokens: aquí no hay ni un
+     hex, ni una familia literal, ni un tamaño fuera de la escala. Los patrones
+     repetidos del sitio (.card, .chip, .stat-*, .label) siguen viniendo de
+     global.css; esto es solo la retícula que DESIGN §6.4 describe. */
+
+  .work-note {
+    border-top: 1px solid var(--color-border);
+    padding-top: 1rem;
+  }
+
+  /* --- Casos de estudio -------------------------------------------------- */
+
+  .case-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  /* Dos columnas a partir de 900 px: por debajo, la tarjeta no llega a las
+     45ch mínimas de medida. */
+  @media (min-width: 900px) {
+    .case-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* El primer caso ocupa las dos columnas, así que un número PAR de tarjetas
+       deja la última sola en su fila. Se expande para cerrar el bloque en vez
+       de quedar coja. Con número impar la rejilla ya cierra sola. */
+    .case-grid > li:last-child:nth-child(even) { grid-column: 1 / -1; }
+  }
+  /* La animación de entrada vive en la celda, no en la tarjeta: `.is-in` fija
+     `transform: none` fuera de capa y le comería el hover a `.card`. */
+  .case-grid > li,
+  .site-grid > li { display: grid; }
+  .case-cell-wide { grid-column: 1 / -1; }
+
+  /* Cada tarjeta es destino de enlace profundo (`…/#sso-oidc`, citado desde
+     fuera del sitio). `html` ya lleva `scroll-padding-top` con la altura de la
+     cabecera pegada, y el destino de un salto es la SUMA de ese relleno y del
+     margen de scroll del elemento; este margen es, por tanto, solo la
+     corrección propia de la tarjeta: los 16 px que la animación de entrada le
+     resta al subirla a su sitio y que, sin esto, la dejarían pegada al borde
+     inferior de la cabecera. Con movimiento reducido no hay animación y los
+     16 px se leen como aire. En los dos casos el título entra entero. */
+  .case-grid > li,
+  .site-grid > li { scroll-margin-top: 1rem; }
+
+  /* El ancho que manda para el trío es el de la TARJETA, no el de la ventana:
+     con dos columnas la misma tarjeta es ancha o estrecha según el caso. */
+  .case-card { container-type: inline-size; }
+
+  .case-title {
+    margin-top: 0.75rem;
+    font-weight: 600;
+  }
+
+  .case-num { transition: color var(--dur-micro) var(--ease-out-quint); }
+  @media (hover: hover) and (pointer: fine) {
+    .case-card:hover .case-num { color: var(--color-accent-fg); }
+  }
+
+  .case-body {
+    display: grid;
+    gap: 1.75rem;
+    margin-top: 1.75rem;
+  }
+
+  .case-trio { display: grid; gap: 1rem; }
+  .case-row > dt { margin-bottom: 0.25rem; }
+
+  /* Columna de etiquetas en cuanto la tarjeta da de sí. 6.5rem y no las 5.5rem
+     del boceto: «THE APPROACH» en mono de 12 px con +0.09em mide 99 px y
+     partiría la etiqueta en dos líneas. */
+  @container (min-width: 30rem) {
+    .case-row {
+      display: grid;
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      column-gap: 1rem;
+      align-items: start;
+    }
+    .case-row > dt {
+      margin-bottom: 0;
+      padding-top: 0.25rem;
+    }
+  }
+
+  /* El caso 01 es el gancho: ocupa las dos columnas y, cuando hay sitio,
+     reparte cuerpo y pruebas en 7/5 en vez de dejar medio metro en blanco. */
+  @container (min-width: 52rem) {
+    .case-featured .case-body {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      column-gap: 3rem;
+      margin-top: 2rem;
+      align-items: start;
+    }
+  }
+
+  .case-aside {
+    display: grid;
+    gap: 1.25rem;
+    align-content: start;
+  }
+
+  /* La franja canónica es de cuatro celdas sobre el fondo de página; dentro de
+     una tarjeta son dos y el papel es `--surface`. Las celdas de los extremos
+     pierden el relleno lateral para alinear con el texto de la tarjeta. */
+  /* 11rem y no 9: a 9 caben dos celdas de 150 px en un móvil de 390 px y un
+     valor como «46 MB → 4 MB» se parte por la mitad. Con 11 la rejilla cae
+     sola a una columna en el móvil y sigue dando dos en la tarjeta ancha. */
+  .case-stats { grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr)); }
+  .case-stats > .stat {
+    background-color: var(--color-surface);
+    padding: 1rem 1.25rem;
+  }
+  .case-stats > .stat:first-child { padding-inline-start: 0; }
+  .case-stats > .stat:last-child { padding-inline-end: 0; }
+
+  /* Las etiquetas de cifra del diccionario son frases, no micro-etiquetas: a
+     dos y tres líneas, 1.2 de interlineado se cierra demasiado. */
+  .case-stats .stat-label,
+  .site-stats .stat-label { line-height: 1.4; }
+
+  .chip-more { color: var(--color-text-3); }
+
+  /* --- Sitios en producción ---------------------------------------------- */
+
+  .sites { margin-top: clamp(4rem, 3rem + 4vw, 6rem); }
+  .sites-title { font-weight: 600; }
+  .sites-lead { margin-top: 0.75rem; }
+
+  .site-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  /* Los tres sitios caben en fila a partir de 1024. En la franja de dos
+     columnas el tercero quedaría solo: se expande. */
+  @media (min-width: 768px) and (max-width: 1023.98px) {
+    .site-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .site-grid > li:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  }
+  @media (min-width: 1024px) {
+    .site-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  .site-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    block-size: 100%;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  /* Chips al pie: con tarjetas de alto igual, la línea de tecnologías cierra
+     las tres a la misma altura. */
+  .site-card .chip-list { margin-top: auto; }
+
+  .site-name {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  /* El espacio antes de la flecha lo daba un blanco dentro del texto; con un
+     icono lo da el margen, en `em` para que crezca con el título. */
+  .site-arrow {
+    color: var(--color-accent-fg);
+    margin-inline-start: 0.25em;
+  }
+
+  .site-stats {
+    display: grid;
+    gap: 0.75rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.875rem;
+  }
+
+  /* Marco de captura: 16:10 exacto, que es la proporción nativa de las
+     1440×900, así que `cover` no recorta nada. */
+  .shot {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface-2);
+  }
+  /* El <img> lo emite `astro:assets` y no recibe el ámbito del componente. */
+  .shot :global(picture) {
+    display: block;
+    block-size: 100%;
+  }
+  .shot :global(img) {
+    inline-size: 100%;
+    /* 6 px de más por abajo: al subir la captura en hover no queda hueco y no
+       hace falta escalarla (una captura escalada se ve borrosa). */
+    block-size: calc(100% + 6px);
+    object-fit: cover;
+    object-position: 50% 0;
+  }
+
+  /* Flex y no línea corrida: así el icono se centra con la mayúscula de la
+     mono en vez de colgar de la línea base, y la altura de la barra la sigue
+     mandando el renglón de texto (18 px > 16 px del icono), o sea que no
+     crece ni un pixel respecto a la flecha de texto que había antes. */
+  .visit-bar {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4375rem 0.75rem;
+    background-color: var(--color-accent-tint);
+    color: var(--color-accent-fg);
+    font-family: var(--font-mono);
+  }
+
+  /* Sin puntero fino no hay hover: en táctil y con movimiento reducido la
+     barra está siempre puesta. Nunca se esconde información en un estado. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .visit-bar {
+      transform: translateY(100%);
+      transition: transform 240ms var(--ease-out-quint);
+    }
+    .shot :global(img) { transition: transform 240ms var(--ease-out-quint); }
+    .site-card:hover .visit-bar,
+    .site-card:focus-visible .visit-bar { transform: translateY(0); }
+    .site-card:hover .shot :global(img) { transform: translateY(-6px); }
+  }
+</style>

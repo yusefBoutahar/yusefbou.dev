@@ -1,0 +1,162 @@
+---
+import type { Lang, SiteContent } from '../i18n/types';
+import { SECTION_IDS, SECTION_INDEX, SITE, cvPath } from '../i18n/utils';
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+interface Props {
+  lang: Lang;
+  contact: SiteContent['contact'];
+  /** Microcopia del botón de copiar; sale de `useUi(lang)`, no del componente. */
+  copyLabel: string;
+  copiedLabel: string;
+  copyAriaLabel: string;
+}
+
+const { lang, contact, copyLabel, copiedLabel, copyAriaLabel } = Astro.props;
+
+// El correo se escribe una vez y se reutiliza en el enlace grande, en el botón
+// secundario y en el atributo que lee el script de copiado.
+const mailto = `mailto:${contact.email}`;
+
+// Cinco destinos en una sola fila, con el mismo reparto de jerarquía que el
+// hero (§6.1): un primario, un secundario y tres enlaces mono de marca. El CV
+// es el primario porque es la acción que un reclutador hace de verdad.
+// El canal de YouTube entra el último: es prueba, no credencial de contacto.
+const profiles: { href: string; label: string; icon: IconName }[] = [
+  { href: SITE.linkedin, label: contact.linkedinLabel, icon: 'linkedin' },
+  { href: SITE.github, label: contact.githubLabel, icon: 'github' },
+  { href: SITE.youtube, label: contact.youtubeLabel, icon: 'youtube' },
+];
+---
+
+<section class="section" id={SECTION_IDS.contact} aria-labelledby="contact-title">
+  <div class="shell">
+    <header class="section-head" data-reveal>
+      <p class="section-kicker">
+        <span><span data-num>{SECTION_INDEX.contact}</span> · {contact.title}</span>
+      </p>
+      <h2 class="section-title" id="contact-title">{contact.title}</h2>
+      <p class="section-lead">{contact.lead}</p>
+    </header>
+
+    <div class="max-w-prose">
+      <!-- El correo es el elemento gráfico principal de la sección: mono a
+           text-xl entre dos filetes, con el botón de copiar al lado. -->
+      <div
+        class="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-y border-border py-3"
+        data-reveal
+        data-copy-root
+        data-copy-email={contact.email}
+        data-copy-done={copiedLabel}
+      >
+        {/* La dirección se queda LIMPIA, sin sobre: es la pieza tipográfica de
+            la sección —mono a text-xl entre dos filetes— y un icono ahí solo
+            le quitaría sitio a lo único que hay que leer. El sobre va en el
+            botón «Escríbeme por correo», que es donde hay una acción. */}
+        <a class="link font-mono text-xl font-medium" href={mailto}>{contact.email}</a>
+
+        <span class="flex items-center gap-3">
+          <!-- Nace oculto y solo lo destapa el script si hay portapapeles: sin
+               JavaScript no aparece un control que no haría nada, y el correo
+               sigue siendo un mailto normal. -->
+          {/* Los dos iconos viajan en el marcado y solo se turnan con una
+              clase: miden lo mismo (16), así que el botón no cambia de ancho
+              al confirmar y no hay ni un pixel de desplazamiento. El nombre
+              accesible lo sigue dando `aria-label`, que no cambia; quien
+              anuncia el éxito es la región viva de al lado, no el icono. */}
+          <button
+            type="button"
+            class="hidden btn btn-ghost font-mono text-xs"
+            aria-label={copyAriaLabel}
+            data-copy-button
+          >
+            <span aria-hidden="true">[{copyLabel}]</span>
+            <span data-copy-icon="idle"><Icon name="copy" size={16} /></span>
+            <span class="hidden" data-copy-icon="done"><Icon name="check" size={16} /></span>
+          </button>
+
+          <!-- Confirmación textual, sin animación y sin depender del color. -->
+          <span class="label" role="status" aria-live="polite" data-copy-status></span>
+        </span>
+      </div>
+
+      {/* Misma estructura que la fila del hero, clase por clase: las dos
+          acciones en un grupo y los perfiles en otro. Con cinco destinos en
+          una sola lista, el tercer enlace se quedaba colgando al final del
+          primer renglón y los otros dos bajaban solos; agrupados, lo que se
+          parte es la fila entera y quedan dos bloques legibles. */}
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4" data-reveal data-reveal-delay="45">
+        <div class="flex flex-wrap gap-3">
+          <a class="btn btn-primary" href={cvPath(lang)} download>
+            {contact.cvLabel}<Icon name="download" size={16} />
+          </a>
+          <a class="btn btn-secondary" href={mailto}>
+            {contact.emailLabel}<Icon name="mail" size={16} />
+          </a>
+        </div>
+
+        <ul class="flex flex-wrap items-center gap-x-2" role="list">
+          {
+            profiles.map((profile) => (
+              <li>
+                <a
+                  class="btn btn-ghost font-mono text-xs"
+                  href={profile.href}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {profile.label}
+                  <Icon name={profile.icon} size={16} />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <p class="mt-10 text-sm text-text-3" data-reveal data-reveal-delay="90">{contact.note}</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Copiar el correo. Progresivo de verdad: el botón está oculto en el HTML y
+  // solo se destapa si existe la API de portapapeles (contexto seguro). Si algo
+  // falla no se anuncia nada: una confirmación falsa es peor que ninguna.
+  const root = document.querySelector<HTMLElement>('[data-copy-root]');
+  const button = root?.querySelector<HTMLButtonElement>('[data-copy-button]');
+  const status = root?.querySelector<HTMLElement>('[data-copy-status]');
+  // Los dos iconos del botón: el de copiar y el de confirmación. Se turnan con
+  // la misma clase `hidden` que ya destapa el botón; si no estuvieran (por lo
+  // que sea) el copiado sigue funcionando igual, solo sin cambio de icono.
+  const iconIdle = button?.querySelector<HTMLElement>('[data-copy-icon="idle"]');
+  const iconDone = button?.querySelector<HTMLElement>('[data-copy-icon="done"]');
+  const email = root?.dataset.copyEmail ?? '';
+  const doneLabel = root?.dataset.copyDone ?? '';
+
+  if (button && status && email && navigator.clipboard) {
+    button.classList.remove('hidden');
+
+    let timer = 0;
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(email);
+      } catch {
+        return;
+      }
+      // Se vacía y se vuelve a escribir para que la región en vivo anuncie
+      // también las repeticiones seguidas.
+      status.textContent = '';
+      status.textContent = doneLabel;
+      iconIdle?.classList.add('hidden');
+      iconDone?.classList.remove('hidden');
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        status.textContent = '';
+        iconDone?.classList.add('hidden');
+        iconIdle?.classList.remove('hidden');
+      }, 2400);
+    });
+  }
+</script>

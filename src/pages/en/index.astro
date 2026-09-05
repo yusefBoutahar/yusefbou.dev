@@ -1,0 +1,61 @@
+---
+import type { ImageMetadata } from 'astro';
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import IndexRail from '../../components/IndexRail.astro';
+import Footer from '../../components/Footer.astro';
+
+import Hero from '../../components/Hero.astro';
+import About from '../../components/About.astro';
+import Experience from '../../components/Experience.astro';
+import Work from '../../components/Work.astro';
+import Stack from '../../components/Stack.astro';
+import Teaching from '../../components/Teaching.astro';
+import Education from '../../components/Education.astro';
+import Contact from '../../components/Contact.astro';
+
+import { useContent, useUi } from '../../i18n/utils';
+
+// Retrato 4:5 (480 × 600): cabeza y hombros, fondo natural desenfocado.
+// 480 px de origen = exactamente 2x sobre la placa de 240 px (DESIGN §6.1).
+import portrait from '../../assets/yusef-perfil.jpg';
+import qahwa from '../../assets/shots/qahwa.png';
+import tacosfrancos from '../../assets/shots/tacosfrancos.png';
+import varaderodemogan from '../../assets/shots/varaderodemogan.png';
+
+const lang = 'en' as const;
+const t = useContent(lang);
+const ui = useUi(lang);
+
+// Indexadas por `SiteProject.shot`, que es la clave que trae el diccionario.
+const shots: Record<string, ImageMetadata> = { qahwa, tacosfrancos, varaderodemogan };
+---
+
+<Layout lang={lang}>
+  <Header slot="header" lang={lang} nav={t.nav} />
+  <IndexRail slot="rail" />
+
+  <Hero
+    lang={lang}
+    hero={t.hero}
+    githubLabel={t.contact.githubLabel}
+    linkedinLabel={t.contact.linkedinLabel}
+    portrait={portrait}
+  />
+  <About lang={lang} about={t.about} />
+  <Experience lang={lang} experience={t.experience} teachingLabel={t.nav.teaching} />
+  <Work lang={lang} work={t.work} shots={shots} />
+  <Stack lang={lang} stack={t.stack} />
+  <Teaching lang={lang} teaching={t.teaching} />
+  <Education lang={lang} education={t.education} />
+  <Contact
+    lang={lang}
+    contact={t.contact}
+    copyLabel={ui.copy}
+    copiedLabel={ui.copied}
+    copyAriaLabel={ui.copyAria}
+  />
+
+  <Footer slot="footer" lang={lang} footer={t.footer} />
+</Layout>

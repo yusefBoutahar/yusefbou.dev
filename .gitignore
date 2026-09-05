@@ -1,0 +1,42 @@
+# Documento de trabajo interno: contiene material confidencial de empresa,
+# rutas de ficheros con credenciales y datos de trayectoria sin publicar.
+# NO debe subirse nunca al repositorio.
+DOSSIER.md
+
+# Plan de actualizacion del perfil publico de GitHub: diagnostico, comandos
+# preparados y decisiones pendientes. Documento de trabajo interno.
+GITHUB-PERFIL.md
+
+# Textos de perfil para pegar a mano: no es confidencial, pero no pinta nada en un repositorio público.
+LINKEDIN.md
+
+# Astro
+dist/
+.astro/
+
+# Dependencias
+node_modules/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+
+# Claude Code
+.claude/
+CLAUDE.md
+
+# Documento de revisión interno, no va al repositorio público.
+REVISION.md

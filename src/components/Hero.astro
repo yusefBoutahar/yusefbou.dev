@@ -1,0 +1,150 @@
+---
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import type { Lang, SiteContent } from '../i18n/types';
+import { SECTION_IDS, SITE } from '../i18n/utils';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+  hero: SiteContent['hero'];
+  /** Etiquetas de los dos enlaces mono a los perfiles. Vienen de `contact`. */
+  githubLabel: string;
+  linkedinLabel: string;
+  /** Retrato ya recortado a 4:5 (480 × 600) = 2x sobre la placa de 240 px (DESIGN §6.1). */
+  portrait: ImageMetadata;
+}
+
+const { hero, githubLabel, linkedinLabel, portrait } = Astro.props;
+---
+
+<!-- §6.1. Dos tercios / un tercio, min(88vh, 780px), nunca 100vh.
+     En móvil se apila y la foto queda DEBAJO del titular: el h1 es el LCP. -->
+<section class="section hero" id={SECTION_IDS.hero} aria-labelledby="hero-title">
+  <div class="shell hero-grid">
+    <div>
+      <!-- Disponibilidad. El punto de estado nunca informa solo (§2.4.5).
+           `.pill-prose` es el modificador canónico para la píldora de frase:
+           conserva el radio de 999 y compone en Inter, porque el diccionario
+           trae una oración y la mono tiene un tope de tres palabras (§3.2). -->
+      <p class="pill pill-prose" data-reveal>
+        <span class="dot" aria-hidden="true"></span>
+        <span>{hero.availability}</span>
+      </p>
+
+      <div class="mt-8" data-reveal data-reveal-delay="45">
+        <p class="label">{hero.name}</p>
+        <h1 class="hero-title text-4xl mt-4" id="hero-title">{hero.tagline}</h1>
+      </div>
+
+      <div class="mt-6" data-reveal data-reveal-delay="90">
+        <!-- El separador viaja con la empresa, así no se queda un punto medio
+             colgando al final del renglón. Y por debajo de 768 px —el umbral
+             de una sola columna del sistema, donde la línea no cabe entera—
+             la empresa baja a su propio renglón y el punto desaparece: un
+             renglón que EMPIEZA por «·» se lee como una viñeta suelta. -->
+        <p class="hero-role text-lg text-text-2">
+          <span class="font-medium text-text">{hero.role}</span>
+          <span class="hero-role-org whitespace-nowrap"
+            ><span class="hero-role-sep text-text-3" aria-hidden="true">·</span> {SITE.employer}</span
+          >
+        </p>
+        <!-- 62ch es el tope de la frase de posicionamiento en §6.1. -->
+        <p class="mt-4 text-base text-text-2 max-w-[62ch]">{hero.intro}</p>
+      </div>
+
+      <div
+        class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4"
+        data-reveal
+        data-reveal-delay="135"
+      >
+        {/* REGLA DE COLOCACIÓN DEL ICONO, una sola y para todo el sitio: el
+            icono va SIEMPRE DETRÁS de la etiqueta, nunca delante. Es donde ya
+            estaban las flechas ↗ y ↓ que sustituye, así que la maqueta no se
+            mueve; y con todos los marcadores al final, la fila de botones
+            cierra con un ritmo limpio en vez de quedar dentada. Tamaño 16
+            siempre: es lo que pesa ópticamente igual que `text-sm` y que la
+            mono `text-xs` — con 20 el icono se lee como una mancha.
+            El icono nunca sustituye a la etiqueta, la acompaña, así que va
+            `aria-hidden` (por defecto en `Icon.astro`) y el nombre accesible
+            del enlace sigue siendo el mismo texto del diccionario.
+            Comentario de expresión y no de HTML a propósito: los de HTML se
+            envían al navegador, y esta página no manda ni un byte que el
+            visitante no necesite. */}
+        <div class="flex flex-wrap gap-3">
+          {/* Lleva a la sección de contacto, no a un `mailto:`; el sobre nombra
+              el DESTINO —donde está el correo— igual que la marca nombra el
+              suyo. Una flecha a la derecha en un salto que baja sería falsa. */}
+          <a class="btn btn-primary" href={`#${SECTION_IDS.contact}`}>
+            {hero.ctaPrimary}<Icon name="mail" size={16} />
+          </a>
+          <a class="btn btn-secondary" href={`#${SECTION_IDS.work}`}>
+            {hero.ctaSecondary}<Icon name="arrow-down" size={16} />
+          </a>
+        </div>
+
+        <!-- Perfiles: mono, sin adorno, sobre `.btn-ghost` para conservar los
+             44 px de objetivo táctil sin inventar una clase nueva. -->
+        {/* La marca SUSTITUYE a la flecha ↗, no se suma a ella: el logotipo ya
+            dice que el destino está fuera, y dos glifos en un enlace de una
+            palabra es exactamente el árbol de navidad que hay que evitar. */}
+        <ul class="flex flex-wrap items-center gap-x-2">
+          <li>
+            <a
+              class="btn btn-ghost font-mono text-xs"
+              href={SITE.github}
+              target="_blank"
+              rel="noopener"
+            >{githubLabel}<Icon name="github" size={16} /></a>
+          </li>
+          <li>
+            <a
+              class="btn btn-ghost font-mono text-xs"
+              href={SITE.linkedin}
+              target="_blank"
+              rel="noopener"
+            >{linkedinLabel}<Icon name="linkedin" size={16} /></a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Cifra y etiqueta son un par: `dl` con la celda canónica `.stat`. -->
+      <dl class="stat-band mt-12" data-reveal data-reveal-delay="180">
+        {
+          hero.stats.map((stat) => (
+            <div class="stat">
+              <dt class="stat-label">{stat.label}</dt>
+              <dd class="stat-value">{stat.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+
+    <!-- Placa rectangular: borde de 1 px y nada más. El hueco de la retícula es
+         más ancho que los 240 px de tope, así que la placa se alinea con el
+         borde derecho del `shell` (900 px es el umbral de `.hero-grid`). -->
+    <figure
+      class="max-w-60 justify-self-start min-[900px]:justify-self-end"
+      data-reveal
+      data-reveal-delay="225"
+    >
+      <div class="portrait-plate">
+        <Picture
+          src={portrait}
+          alt={hero.photoAlt}
+          densities={[1, 2]}
+          formats={['avif', 'webp']}
+          fallbackFormat="jpeg"
+          width={240}
+          height={300}
+          loading="eager"
+          decoding="sync"
+          fetchpriority="high"
+          class="w-full"
+        />
+      </div>
+      <figcaption class="label mt-3">{hero.location}</figcaption>
+    </figure>
+  </div>
+</section>

@@ -1,0 +1,258 @@
+---
+/* ============================================================================
+   Videos.astro — el bloque «En vídeo» de una fila de Docencia o de Formación.
+
+   POR QUÉ SE ENLAZA Y NO SE INCRUSTA
+   ----------------------------------
+   Un `<iframe>` de YouTube mete un tercero en una página que hoy no tiene
+   ninguno: ~700 KB de JavaScript ajeno, cookies de doble clic, y una CSP que
+   habría que abrir a `frame-src`, `script-src` y `img-src` de cuatro dominios
+   de Google. Los tres vídeos son prueba documental, no contenido de consumo:
+   se enseñan con su miniatura local y se abren en YouTube. Coste para la
+   página: tres imágenes. Coste de la alternativa: el sitio entero.
+
+   POR QUÉ LAS MINIATURAS NO SON TODAS 16:9
+   ----------------------------------------
+   El `hqdefault` de YouTube siempre mide 480 × 360. Un vídeo 16:9 llega ahí
+   letterboxeado, con 45 px de barra negra arriba y abajo — es el caso de
+   `bqBcaGVYcR8`, y a ese sí se le quitan las barras (queda 480 × 270).
+   Los dos vídeos del TFG son 4:3 nativos: su fotograma ocupa el alto completo
+   y recortarlos a 270 px les come contenido (comprobado a ojo: se llevaba por
+   delante el círculo «Robomap Module» por arriba y el «Meteorological Module»
+   por abajo). Así que cada miniatura conserva su proporción real y el marco se
+   adapta a ella; nunca al revés. Como los dos vídeos 4:3 son justo los que van
+   emparejados en Formación, no hay una sola pareja de marcos desiguales.
+
+   Sin proporción forzada tampoco hay CLS: `astro:assets` escribe `width` y
+   `height` en el `<img>` y el navegador reserva la caja antes de descargar.
+   ========================================================================= */
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+
+import Icon from './Icon.astro';
+import type { Lang, VideoRef } from '../i18n/utils';
+import { useUi, youtubeWatchUrl } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+  videos: VideoRef[];
+}
+
+const { lang, videos } = Astro.props;
+const ui = useUi(lang);
+
+/**
+ * Miniaturas ya procesadas, resueltas por el identificador del vídeo. El
+ * diccionario solo guarda el id, así que el componente no necesita ninguna
+ * prop de imagen y las dos secciones que lo usan no tocan `index.astro`.
+ * `-card` es el fichero que se publica; el `<id>.jpg` de al lado es el
+ * original de YouTube, que se conserva como procedencia y no se importa.
+ */
+const thumbs = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/video/*-card.jpg',
+  { eager: true },
+);
+
+function thumbFor(id: string): ImageMetadata {
+  const entry = thumbs[`../assets/video/${id}-card.jpg`];
+  // Un id sin miniatura es un error de contenido: que se caiga la build y no
+  // que salga una tarjeta coja en producción.
+  if (!entry) throw new Error(`Videos.astro: falta src/assets/video/${id}-card.jpg`);
+  return entry.default;
+}
+
+/**
+ * Anchos reales de la miniatura en pantalla, que no son los mismos según
+ * vayan sueltas (Docencia, una) o en pareja (Formación, dos):
+ *   · suelta   → tarjeta de 26rem, menos 2 × 20 px de relleno ≈ 376 px
+ *   · pareja   → media columna de ~556 px con 16 px de hueco ≈ 230 px
+ *   · < 640 px → una columna a sangre: 100vw − 2 × gutter − 2 × relleno
+ * El origen mide 480 px de ancho, así que `widths` se para ahí: `astro:assets`
+ * no amplía y pedir más solo produciría entradas repetidas en el `srcset`.
+ */
+const paired = videos.length > 1;
+const sizes = paired
+  ? '(min-width: 640px) 240px, calc(100vw - 5rem)'
+  : '(min-width: 640px) 376px, calc(100vw - 5rem)';
+---
+
+<div class="video-block" data-paired={paired ? '' : undefined}>
+  <p class="label video-label">{ui.videoLabel}</p>
+
+  {/* role="list": Preflight quita la viñeta y con ella la semántica en
+      VoiceOver; el rol explícito la devuelve. */}
+  <ul role="list" class="video-list">
+    {
+      videos.map((video) => {
+        const thumb = thumbFor(video.id);
+        const titleId = `video-${video.id}-title`;
+        const actionId = `video-${video.id}-action`;
+
+        return (
+          <li>
+            {/*
+              Toda la tarjeta es el enlace, como las de sitio en producción.
+              El nombre accesible se compone con `aria-labelledby` de dos
+              trozos VISIBLES —título y acción— para no romper «Label in
+              Name» (WCAG 2.5.3); si se dejara el contenido entero, el nombre
+              arrastraría el pie y el alt de la miniatura y quedaría en un
+              párrafo. El aviso de pestaña nueva viaja dentro de la acción,
+              en `.sr-only`: verlo ya lo dice el icono, oírlo no.
+            */}
+            <a
+              class="card video-card"
+              href={youtubeWatchUrl(video.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-labelledby={`${titleId} ${actionId}`}
+            >
+              <span class="video-frame">
+                <Picture
+                  src={thumb}
+                  alt={video.thumbAlt}
+                  formats={['avif', 'webp']}
+                  fallbackFormat="jpeg"
+                  width={thumb.width}
+                  height={thumb.height}
+                  widths={[240, 360, 480]}
+                  sizes={sizes}
+                  loading="lazy"
+                  decoding="async"
+                />
+                {/* Placa sólida, no un icono suelto sobre la foto: el ámbar
+                    con filete `--accent-fg` es el mismo par contrastado de
+                    `.btn-primary`, así que se lee igual sobre un aula, sobre
+                    un logotipo blanco y sobre un diagrama azul. */}
+                <span class="video-play" aria-hidden="true">
+                  <Icon name="play" size={20} />
+                </span>
+              </span>
+
+              <p class="video-title" id={titleId}>{video.title}</p>
+              <p class="video-caption text-sm text-text-2">{video.caption}</p>
+
+              {/* Sin saltos de línea entre el rótulo y el `.sr-only`: Astro
+                  dejaría un nodo de texto en blanco y el nombre accesible
+                  saldría con un espacio antes de la coma. */}
+              <span class="video-watch" id={actionId}>
+                <Icon name="youtube" size={16} />{ui.videoWatch}<span class="sr-only">, {ui.videoNewTab}</span>
+              </span>
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</div>
+
+<style>
+  .video-block { margin-top: 1.5rem; }
+
+  .video-label {
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Una sola tarjeta no se estira a los 556 px de la columna: a ese ancho la
+     miniatura de 480 px se ampliaría y el pie pasaría de los 68ch de medida.
+     En pareja sí llenan la columna, media cada una. */
+  .video-list {
+    display: grid;
+    gap: 1rem;
+    max-inline-size: 26rem;
+  }
+  @media (min-width: 640px) {
+    .video-block[data-paired] .video-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-inline-size: none;
+    }
+  }
+
+  /* `.card` del sistema, con dos ajustes y ninguno inventado:
+     · columna flexible con `block-size: 100%`, para que la pareja cierre a la
+       misma altura aunque un pie tenga una línea más;
+     · relleno de 20 px en vez de 24/32. Una tarjeta emparejada mide 270 px y
+       con 32 px por lado el pie se quedaba en 28 caracteres por renglón, que
+       es ilegible. 20 px sigue siendo un múltiplo de 4 del ritmo de DESIGN. */
+  .video-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    block-size: 100%;
+    padding: 1.25rem;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  /* Marco de la miniatura: mismo trato que `.shot` en Obra —filete, fondo
+     `--surface-2` mientras carga y recorte— con el radio interior un paso por
+     debajo del de la tarjeta, que es lo ópticamente correcto dentro de un
+     relleno de 20 px. Sin `aspect-ratio`: la caja la fija el `width`/`height`
+     que escribe `astro:assets`, así que la proporción real de cada vídeo manda
+     y el CLS sigue en cero. */
+  .video-frame {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-2);
+  }
+  /* El <picture>/<img> los emite `astro:assets` y no reciben el ámbito. */
+  .video-frame :global(picture) { display: block; }
+  .video-frame :global(img) {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  /* 40 px con radio 20 (`--radius-xl`, el techo del sistema) = disco exacto,
+     sin inventar un radio. Abajo a la izquierda y no en el centro: en el
+     centro tapaba la pantalla del reto en Ciberlandia y la palabra
+     «Controller» en el diagrama del TFG, que es justo lo que hay que ver. */
+  .video-play {
+    position: absolute;
+    inset-inline-start: 0.75rem;
+    inset-block-end: 0.75rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border: 1px solid var(--color-accent-fg);
+    border-radius: var(--radius-xl);
+    background-color: var(--color-accent);
+    color: var(--color-accent-ink);
+    transition: background-color var(--dur-micro) var(--ease-out-quint);
+  }
+  /* El triángulo tiene la masa a la izquierda de su caja; 1 px a la derecha lo
+     centra ópticamente dentro del disco. */
+  .video-play :global(svg) { transform: translateX(1px); }
+
+  .video-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  /* `margin-top: auto` empuja la acción al pie: en pareja, las dos líneas
+     «Ver en YouTube» caen a la misma altura aunque los pies midan distinto. */
+  .video-watch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.125rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--text-xs--letter-spacing);
+    color: var(--color-accent-fg);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .video-card:hover .video-play { background-color: var(--color-accent-hi); }
+  }
+</style>

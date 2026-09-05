@@ -1,0 +1,116 @@
+---
+import type { Lang, SiteContent, VideoRef } from '../i18n/types';
+import { SECTION_IDS, SECTION_INDEX } from '../i18n/utils';
+import { revealDelay } from '../lib/format';
+import Videos from './Videos.astro';
+
+interface Props {
+  lang: Lang;
+  education: SiteContent['education'];
+}
+
+const { lang, education } = Astro.props;
+
+/**
+ * Una fila de formación, ya preparada para maquetar.
+ * El diccionario mete el trabajo de fin de grado dentro de `detail`, y
+ * DESIGN §6.6 pide que vaya en su propia línea. En vez de recortar por índice
+ * o por idioma —las dos cosas se rompen al primer cambio de contenido—
+ * separamos por frases: la primera es el detalle corriente y lo que sobre se
+ * anexa como nota. Hoy solo dispara en el grado; si mañana otra titulación
+ * gana una segunda frase, el trato es el mismo sin tocar nada.
+ */
+interface EducationEntry {
+  title: string;
+  org: string;
+  period: string;
+  detail: string;
+  /** Rótulo corrido de la nota: lo que va antes de los dos puntos. */
+  noteLead: string | null;
+  /** Cuerpo de la nota. `null` cuando el detalle es de una sola frase. */
+  noteBody: string | null;
+  /** Prueba en vídeo. Hoy solo la tiene el trabajo de fin de grado. */
+  videos: VideoRef[];
+}
+
+const entries: EducationEntry[] = education.items.map((item) => {
+  const [first, ...rest] = item.detail.split(/(?<=\.)\s+/);
+  const note = rest.join(' ').trim();
+  const colon = note.indexOf(':');
+
+  return {
+    title: item.title,
+    org: item.org,
+    period: item.period,
+    detail: first ?? item.detail,
+    noteLead: colon > 0 ? note.slice(0, colon) : null,
+    noteBody: colon > 0 ? note.slice(colon + 1).trim() : note || null,
+    videos: item.videos ?? [],
+  };
+});
+---
+
+<!-- 06 · Formación. La sección menos importante de la página, y la maqueta lo
+     dice: banda de --surface compartida con Docencia, una sola columna, cuatro
+     filas separadas por filete y ni una tarjeta, ni una métrica, ni mono fuera
+     de las fechas (DESIGN §6.6).
+     Ancho: max-w-narrow, el mismo de Docencia y el que se le fuerza aquí a
+     .section-head, para que las dos secciones de la banda compartan retícula y
+     el filete de la primera fila caiga bajo la vertical del cintillo.
+     Alineación: a la izquierda del shell, como las otras cinco secciones. El
+     centrado que pedía §6.6 dejaba 312 px muertos a la izquierda a 1440 y
+     partía en dos la vertical de la página; se conserva la medida (45rem) y
+     se cambia solo el eje. -->
+<section
+  class="section section-surface"
+  id={SECTION_IDS.education}
+  aria-labelledby="education-title"
+>
+  <div class="shell">
+    <header class="section-head max-w-narrow" data-reveal>
+      <p class="section-kicker">
+        <span><span data-num>{SECTION_INDEX.education}</span> · {education.title}</span>
+      </p>
+      <h2 class="section-title" id="education-title">{education.title}</h2>
+    </header>
+
+    <!-- role="list": Preflight quita las viñetas y con ellas la semántica de
+         lista en VoiceOver; el rol explícito la devuelve. -->
+    <ul role="list" class="max-w-narrow">
+      {
+        entries.map((entry, i) => (
+          <li
+            class="grid gap-y-2 border-t border-border py-6 md:grid-cols-[140px_minmax(0,1fr)] md:gap-x-6 md:gap-y-0"
+            data-reveal
+            data-reveal-delay={revealDelay(i)}
+          >
+            {/* md:pt-1 alinea ópticamente la mayúscula de la fecha con la del título. */}
+            <p class="font-mono text-xs text-text-3 md:pt-1" data-num>
+              {entry.period}
+            </p>
+
+            <div>
+              <h3 class="text-xl font-normal">{entry.title}</h3>
+              <p class="mt-1 text-sm text-text-2">{entry.org}</p>
+              <p class="mt-3 text-sm text-text-2">{entry.detail}</p>
+
+              {entry.noteBody && (
+                <p class="mt-4 border-l border-border-strong pl-4 text-base text-text-2">
+                  {entry.noteLead && (
+                    <span class="font-medium text-text">{entry.noteLead}:</span>
+                  )}
+                  {entry.noteBody}
+                </p>
+              )}
+
+              {/* El trabajo de fin de grado es la única fila con vídeo, y son
+                  dos: van en pareja debajo de la nota, que es justo donde el
+                  texto acaba de prometerlos. */}
+              {entry.videos.length > 0 && <Videos lang={lang} videos={entry.videos} />}
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,58 @@
+---
+import type { Lang, SiteContent } from '../i18n/types';
+import { SITE } from '../i18n/utils';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+  footer: SiteContent['footer'];
+}
+
+const { footer } = Astro.props;
+
+// El colofón técnico es una credencial gratis: dice cómo está hecho el sitio y
+// que no hay analítica de terceros ni cookies. Sale entero del diccionario.
+//
+// El conmutador de tema ya NO vive aquí: se ha mudado a la cabecera, junto al
+// idioma, que es donde se buscan las preferencias. Duplicarlo habría dejado dos
+// controles del mismo estado en la misma página.
+const year = new Date().getFullYear().toString();
+---
+
+<footer class="site-footer">
+  <div class="shell footer-bar">
+    <p class="max-w-prose">
+      {footer.builtWith}
+      {' '}
+      {/* Único enlace social del pie, y va con su marca: es el mismo destino
+          que el enlace de GitHub del hero y del bloque de contacto, y llevar
+          allí el logotipo y aquí una flecha genérica sería la misma dirección
+          contada de dos maneras. La marca dice además, sin gastar una palabra,
+          que se sale del sitio. Detrás de la etiqueta, como en todo el sitio.
+          No se añaden aquí LinkedIn ni YouTube: el pie no tenía esos enlaces,
+          y la fila de contacto —que sí los lleva los tres, canal incluido— es
+          la que manda. Un segundo juego de perfiles a 11 px sería ruido. */}
+      <a class="link footer-source" href={SITE.github} rel="me noopener" target="_blank">
+        {footer.sourceLabel}<Icon name="github" size={14} />
+      </a>
+    </p>
+
+    {/* El año lo pone el componente y NO el diccionario: si viaja en la
+         cadena traducida se imprime dos veces («2026 · © 2026 …») y además
+         envejece con el fichero. `rights` es solo la frase. */}
+    <p><span data-num>©&nbsp;{year}</span> {footer.rights}</p>
+  </div>
+</footer>
+
+<style>
+  /* El pie es mono de 11-12 px: el icono va a 14 para pesar lo mismo que la
+     flecha que sustituye, y con su propio hueco, porque aquí no hay `.btn`
+     que ponga el `gap`. */
+  .footer-source {
+    /* El subrayado de `.link` crece bajo todo el enlace, icono incluido. */
+    white-space: nowrap;
+  }
+  .footer-source :global(svg) {
+    margin-inline-start: 0.3em;
+  }
+</style>

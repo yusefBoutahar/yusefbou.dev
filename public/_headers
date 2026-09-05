@@ -1,0 +1,77 @@
+# Headers para Cloudflare Pages — yusefbou.dev
+#
+# Content-Security-Policy: por qué hashes y no 'unsafe-inline'.
+# El sitio es estático, así que no hay servidor que pueda inventarse un nonce
+# por petición; y 'unsafe-inline' abriría la política entera para tapar seis
+# scripts propios de 200 bytes. Se listan los SHA-256 de cada bloque en línea
+# que emite el build: el script de tema del <head> (tiene que ir en línea o hay
+# destello), los dos JSON-LD —uno por idioma, distinto contenido, distinto
+# hash—, los seis scripts de componente que Astro deja en línea por pequeños, y
+# el CSS crítico de cabecera y hero. En cuanto un navegador ve un hash ignora
+# 'unsafe-inline', así que no se pone ninguno.
+#
+# CUIDADO: cambiar cualquiera de esos bloques cambia su hash y el navegador
+# bloquea el script sin decir nada visible. Después de tocar un <script> de
+# componente, el script de tema, el CSS crítico o el JSON-LD:
+#   npx astro build && node scratchpad/csp-hashes.mjs check
+# El script sale con código 1 si falta un hash o si aquí sobra alguno.
+#
+# No hay ningún origen de terceros a propósito: las tres fuentes van
+# autoalojadas con @fontsource-variable, no hay analítica y no hay cookies, así
+# que default-src 'self' basta y font-src no necesita ningún dominio.
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=(), xr-spatial-tracking=()
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' 'sha256-2OZtK3/BmxBgphGSfIRVSyvA7uOEy8f1B1obK3luLNs=' 'sha256-qiaj0HH5KHCf/pl0uGmZ4geY5/3JzBuoEVDjhbYOyxI=' 'sha256-wV1/JeSil7oZqPDiAbkSRcJJajy2uPCPgtbDCFrVFpg=' 'sha256-hgY0/R6lC7UjQQ4Tg8a1BQYKZ3d82vjjWYlI9C8dU+g=' 'sha256-zeUSzERH0FlAK6xuDfDc888Yt6DSupk1ILUqcoyHW5U=' 'sha256-g0VOGuwB4tji1BQ10x8OpHaA+BlnYTynW0NgXVmML3o=' 'sha256-8VvB0W8oNRmSi3HI/6ImVba4QQKr68UIuzuwIo43Ibs=' 'sha256-OGZtvJx5BO+2hTmleU4YQ0nsNx6rH4GsvY7el/A0ccY=' 'sha256-s9DeQjvvsmVm94fSBojyLwGoqr3pSjlGTJdm+0JGTYA='; style-src 'self' 'sha256-VlpDFCeGK8JmAAiT6pG7wl9bikw/TFlF2s0IaVyuWG0='; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; media-src 'none'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
+
+# Todo lo que emite Astro con huella en el nombre: JS, CSS, imágenes
+# procesadas por astro:assets y los woff2 de las tres familias. El nombre
+# cambia con el contenido, así que un año inmutable es gratis.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Estos NO llevan huella en el nombre. Se cachean un año igualmente porque
+# cambian una vez cada nunca; si se regeneran, hay que purgar la caché del
+# dominio en Cloudflare o no se verán. El comodín cubre las dos imágenes
+# sociales: `og-image.jpg` para `/` y `og-image-en.jpg` para `/en/`.
+/og-image*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/favicon.*
+  Cache-Control: public, max-age=31536000, immutable
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=31536000, immutable
+
+# El currículum se sustituye de vez en cuando y es lo que más se descarga: un
+# día de caché con revalidación.
+/cv-yousuf-boutahar*.pdf
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/site.webmanifest
+  Cache-Control: public, max-age=86400
+
+/robots.txt
+  Cache-Control: public, max-age=86400
+
+/sitemap-*.xml
+  Cache-Control: public, max-age=3600
+
+# HTML sin caché: es lo único que cambia en cada despliegue y lo que cuelga de
+# él ya viene con huella.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/en/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/en/index.html
+  Cache-Control: public, max-age=0, must-revalidate

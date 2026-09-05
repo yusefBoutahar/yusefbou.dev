@@ -1,0 +1,233 @@
+---
+// Fuentes autoalojadas: quita dos orígenes de terceros de la CSP y dos saltos
+// de DNS del camino crítico. Cada hoja declara todos los subconjuntos, pero el
+// navegador solo descarga el que necesita por `unicode-range`.
+import '@fontsource-variable/inter/wght.css';
+import '@fontsource-variable/source-serif-4/wght.css';
+import '@fontsource-variable/jetbrains-mono/wght.css';
+
+// Los dos únicos woff2 que se precargan. Se importan como asset de Vite para
+// que la URL lleve huella y coincida con la que emite la hoja de fontsource.
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import serifLatin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url';
+
+import '../styles/global.css';
+
+import type { Lang } from '../i18n/types';
+import {
+  SITE,
+  absoluteUrl,
+  alternatePaths,
+  bcp47,
+  localizePath,
+  ogLocale,
+  useContent,
+} from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useContent(lang);
+
+const canonical = absoluteUrl(localizePath(lang, Astro.url.pathname));
+const alternates = alternatePaths(Astro.url.pathname);
+
+/**
+ * Retrato social, uno por idioma. La tarjeta lleva el titular impreso, así que
+ * la española no puede servirse en `/en/`: quien comparta la URL inglesa vería
+ * una imagen en español bajo un `og:image:alt` que promete otra cosa. Las dos
+ * comparten composición, paleta y tipografía; solo cambia la línea del cargo.
+ * Son ficheros estáticos de `public/`, no texto traducible, por eso viven aquí
+ * y no en el diccionario, junto a la ruta española que ya declara `SITE`.
+ */
+const OG_IMAGE = {
+  es: SITE.ogImage,
+  en: '/og-image-en.jpg',
+} as const satisfies Record<Lang, string>;
+
+const ogImage = absoluteUrl(OG_IMAGE[lang]);
+
+/**
+ * Cargo FORMAL del puesto actual, tal y como lo declara la sección de
+ * Experiencia y lo confirma LinkedIn. Sale del diccionario, del único empleo
+ * marcado como `current`, para que no pueda desincronizarse de la ficha.
+ *
+ * En `schema.org`, `jobTitle` junto a `worksFor` afirma «este es mi cargo en
+ * esta empresa», y es un dato legible por máquina que los agregadores indexan.
+ * Por eso NO puede llevar el titular con el que se presenta —«Ingeniero
+ * Fullstack Senior»—: eso atribuiría al empleador un puesto que no le consta.
+ * El titular es suyo, no de la empresa, y viaja en `description` y en
+ * `disambiguatingDescription`, donde describe a la persona sin afirmar cargo.
+ */
+const formalJobTitle =
+  t.experience.jobs.find((job) => job.current)?.role ?? 'Senior Product & Experience Engineer';
+
+/** Datos estructurados. Solo hechos que ya están en el diccionario. */
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: SITE.fullName,
+  alternateName: t.hero.name,
+  givenName: 'Yousuf',
+  familyName: 'Boutahar El Maachi',
+  jobTitle: formalJobTitle,
+  description: t.meta.description,
+  disambiguatingDescription: t.hero.role,
+  url: canonical,
+  image: ogImage,
+  email: `mailto:${t.contact.email}`,
+  sameAs: [SITE.github, SITE.linkedin],
+  // Todo lo de esta lista está respaldado por la sección de Stack y por las
+  // viñetas de Experiencia. Cubre las cuatro capas que promete el titular
+  // —backend, frontend, base de datos y despliegue—, no solo la de IA.
+  knowsAbout: [
+    'Python',
+    'TypeScript',
+    'FastAPI',
+    'Django',
+    'React',
+    'Next.js',
+    'Astro',
+    'PostgreSQL',
+    'Retrieval-Augmented Generation',
+    'LangGraph',
+    'Model Context Protocol',
+    'Docker',
+    'Kubernetes',
+  ],
+  knowsLanguage: [
+    { '@type': 'Language', name: 'Spanish', alternateName: 'es' },
+    { '@type': 'Language', name: 'English', alternateName: 'en' },
+  ],
+  alumniOf: {
+    '@type': 'CollegeOrUniversity',
+    name: SITE.university,
+    sameAs: 'https://www.ulpgc.es/',
+  },
+  worksFor: {
+    '@type': 'Organization',
+    name: SITE.employer,
+  },
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: SITE.locality,
+    addressRegion: SITE.region,
+    addressCountry: SITE.country,
+  },
+};
+---
+
+<!doctype html>
+<html lang={bcp47[lang]} dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Tema antes de pintar: sin destello. Cuatro líneas, sin dependencias. -->
+    <script is:inline>
+      try {
+        var stored = localStorage.getItem('theme');
+        if (stored === 'light' || stored === 'dark') {
+          document.documentElement.dataset.theme = stored;
+        }
+      } catch (e) {}
+      // Habilita el estado inicial de las animaciones de entrada. Sin esta
+      // línea (sin JS, o con movimiento reducido) la página se ve entera.
+      try {
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          document.documentElement.dataset.anim = 'on';
+        }
+      } catch (e) {}
+    </script>
+
+    <title>{t.meta.title}</title>
+    <meta name="description" content={t.meta.description} />
+    <meta name="keywords" content={t.meta.keywords} />
+    <meta name="author" content={SITE.fullName} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content="index, follow" />
+    <meta
+      name="googlebot"
+      content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+    />
+
+    <!-- El color de la barra del navegador sigue al tema, no lo fuerza. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FBFAF9" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0A0B0D" />
+
+    {
+      alternates.map((alt) => (
+        <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+      ))
+    }
+
+    <meta property="og:type" content="profile" />
+    <meta property="og:site_name" content="yusefbou.dev" />
+    <meta property="og:title" content={t.meta.ogTitle} />
+    <meta property="og:description" content={t.meta.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={ogLocale[lang]} />
+    <meta property="og:locale:alternate" content={ogLocale[lang === 'es' ? 'en' : 'es']} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={t.meta.ogAlt} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={t.meta.ogTitle} />
+    <meta name="twitter:description" content={t.meta.description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={t.meta.ogAlt} />
+
+    <link rel="preload" as="font" type="font/woff2" href={interLatin} crossorigin="anonymous" />
+    <link rel="preload" as="font" type="font/woff2" href={serifLatin} crossorigin="anonymous" />
+
+    <!-- El .ico primero y el SVG después: el navegador se queda con el último
+         formato que entiende, así que el monograma vectorial gana en todo lo
+         moderno y el .ico solo sirve de reserva. -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(person)} />
+
+    <!-- CSS crítico: solo geometría de cabecera y hero, sin un solo color.
+         Evita el salto de maqueta si la hoja principal llega un instante tarde. -->
+    <style is:inline>
+      :root { --header-h: 3.5rem; }
+      body { margin: 0; }
+      .shell { width: 100%; max-width: 90rem; margin-inline: auto; padding-inline: clamp(1.25rem, 4vw, 3rem); }
+      .site-header { position: sticky; top: 0; z-index: 50; }
+      .header-bar { display: flex; align-items: center; gap: 0.75rem; block-size: var(--header-h); }
+      .header-nav { display: none; }
+      @media (min-width: 900px) { .header-nav { display: flex; align-items: center; gap: 1.5rem; margin-inline: auto; } }
+      .hero { display: flex; align-items: center; min-block-size: min(88vh, 780px); }
+      .hero-grid { display: grid; gap: 2.5rem; inline-size: 100%; }
+      @media (min-width: 900px) { .hero-grid { grid-template-columns: 2fr 1fr; align-items: center; gap: 3rem; } }
+      .portrait-plate { inline-size: 100%; max-inline-size: 15rem; overflow: hidden; }
+      img, svg { display: block; max-width: 100%; height: auto; }
+    </style>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main-content">{t.nav.skipToContent}</a>
+
+    <slot name="header" />
+    <slot name="rail" />
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <slot name="footer" />
+
+    <script>
+      import '../scripts/reveal';
+    </script>
+  </body>
+</html>

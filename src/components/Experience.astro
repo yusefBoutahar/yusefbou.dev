@@ -1,0 +1,239 @@
+---
+import type { Lang, SiteContent } from '../i18n/types';
+import { SECTION_IDS, SECTION_INDEX } from '../i18n/utils';
+import { revealDelay, splitVersion } from '../lib/format';
+
+interface Props {
+  lang: Lang;
+  experience: SiteContent['experience'];
+  /** Texto del enlace a `05 Docencia`: los puestos docentes no se repiten aquí. */
+  teachingLabel: string;
+}
+
+const { experience, teachingLabel } = Astro.props;
+
+/**
+ * Empresas cuyos puestos son docentes. Viven en `05 Docencia` (DESIGN §6.3) y
+ * aquí solo se enlazan. Son nombres propios idénticos en `es.ts` y en `en.ts`,
+ * así que sirven de clave y nunca se imprimen: el contrato `Job` no trae
+ * ninguna marca que permita distinguir un puesto docente de uno de ingeniería.
+ */
+const TEACHING_EMPLOYERS: ReadonlySet<string> = new Set([
+  'Flou',
+  'Instituto Universitario de Ciencias y Tecnologías Cibernéticas',
+]);
+
+const jobs = experience.jobs.filter((job) => !TEACHING_EMPLOYERS.has(job.company));
+const hasTeachingRoles = jobs.length < experience.jobs.length;
+
+/** Separador de rango de fechas: `—` en el diccionario español, `-` en el inglés. */
+const RANGE_SEPARATOR = /\s+[—–-]\s+/;
+
+/**
+ * `ago. 2022 — ene. 2026` → `['ago. 2022 —', 'ene. 2026']`. Los dos extremos se
+ * componen por separado para que la columna de 140 px parta el rango por el
+ * guion y nunca por dentro de una fecha.
+ *
+ * En el puesto actual solo se pinta el primer tramo: el final del rango lo dice
+ * la píldora con `presentLabel`, que el diccionario ya repite dentro de
+ * `period` («ene. 2026 — Actualidad»), y escribirlo dos veces sería ruido.
+ */
+function periodParts(period: string): string[] {
+  const match = RANGE_SEPARATOR.exec(period);
+  if (!match) return [period];
+  return [period.slice(0, match.index) + match[0].trimEnd(), period.slice(match.index + match[0].length)];
+}
+---
+
+<section class="section" id={SECTION_IDS.experience} aria-labelledby="experience-title">
+  <div class="shell">
+    <header class="section-head" data-reveal>
+      <p class="section-kicker">
+        <span><span data-num>{SECTION_INDEX.experience}</span> · {experience.title}</span>
+      </p>
+      <h2 class="section-title" id="experience-title">{experience.title}</h2>
+      <p class="section-lead">{experience.lead}</p>
+    </header>
+
+    <ol class="max-w-content" role="list">
+      {
+        jobs.map((job, index) => (
+          <li
+            class:list={[
+              'exp-entry',
+              job.current ? 'card card-current exp-entry-current' : 'exp-entry-plain',
+            ]}
+            data-reveal
+            data-reveal-delay={revealDelay(index)}
+          >
+            <p class="exp-when">
+              {periodParts(job.period)
+                .slice(0, job.current ? 1 : undefined)
+                .map((part) => (
+                  <span class="exp-period" data-num>{part}</span>
+                ))}
+              {job.current && <span class="pill pill-accent">{experience.presentLabel}</span>}
+            </p>
+
+            <div>
+              <h3 class:list={['font-semibold', job.current ? 'text-2xl' : 'text-xl']}>{job.role}</h3>
+
+              <p class:list={['text-sm text-text-2', job.current ? 'mt-2' : 'mt-1']}>
+                <span class="font-medium">{job.company}</span> · {job.location}
+              </p>
+
+              <p class:list={['measure text-base', job.current ? 'mt-5' : 'mt-4']}>{job.summary}</p>
+
+              <ul class:list={['exp-bullets measure', job.current ? 'mt-6' : 'mt-4']} role="list">
+                {job.bullets.map((bullet, position) => (
+                  /* En un puesto cerrado el primer bullet es el de liderazgo
+                     técnico y va en peso 500: es lo que se lee primero. */
+                  <li
+                    class:list={[
+                      'text-sm text-text-2',
+                      { 'font-medium': !job.current && position === 0 },
+                    ]}
+                  >
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
+
+              <ul class:list={['chip-list', job.current ? 'mt-8' : 'mt-6']} role="list">
+                {job.tags.map((tag) => {
+                  const { name, version } = splitVersion(tag);
+                  return (
+                    <li class="chip">{name}{version && <span class="chip-version">{version}</span>}</li>
+                  );
+                })}
+              </ul>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    {
+      hasTeachingRoles && (
+        <p class="exp-teaching max-w-content" data-reveal data-reveal-delay={revealDelay(jobs.length)}>
+          <span class="label" data-num>
+            {SECTION_INDEX.teaching}
+          </span>
+          <a class="link text-sm font-medium" href={`#${SECTION_IDS.teaching}`}>
+            {teachingLabel}
+            <span aria-hidden="true"> ↓</span>
+          </a>
+        </p>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  /* Anatomía de DESIGN §6.3: lista vertical con columna de fechas, no línea de
+     tiempo. Aquí solo hay maqueta; tipografía y color salen de las utilidades
+     derivadas de los tokens, y las piezas repetidas (.card, .card-current,
+     .chip, .pill-accent, .label, .link) de global.css. Ninguna de estas reglas
+     se repite en otra sección, así que no suben a la hoja global. */
+
+  .exp-entry {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  /* Desde 768 px, columna de periodo fija de 140 px. */
+  @media (min-width: 768px) {
+    .exp-entry {
+      grid-template-columns: 8.75rem minmax(0, 1fr);
+      column-gap: 1.5rem;
+      row-gap: 0;
+      align-items: start;
+    }
+  }
+
+  /* Puesto cerrado: lo separa un filete, no una caja. */
+  .exp-entry-plain {
+    border-top: 1px solid var(--color-border);
+    padding-block: 2rem;
+  }
+
+  /* El empleo actual manda: tarjeta con canto de acento y el doble de aire
+     vertical que una fila normal, dentro y fuera. */
+  .exp-entry-current {
+    padding: 1.5rem;
+    margin-block: 2rem;
+  }
+  .exp-entry-current:first-child {
+    margin-top: 0;
+  }
+  @media (min-width: 768px) {
+    .exp-entry-current {
+      padding: 2.5rem 2.5rem 2.75rem;
+    }
+  }
+
+  /* El rango se compone por tramos: en la columna de 140 px cae en dos líneas
+     partiendo por el guion, y en móvil ocupa una sola. */
+  .exp-when {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.5rem;
+    row-gap: 0.375rem;
+  }
+  /* Alineación óptica con la primera línea del cargo, que es serif de 20-24 px. */
+  @media (min-width: 768px) {
+    .exp-when {
+      padding-top: 0.3rem;
+    }
+  }
+
+  .exp-period {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    letter-spacing: var(--text-xs--letter-spacing);
+    color: var(--color-text-3);
+    white-space: nowrap;
+  }
+
+  /* Bullet con guion: filete de 8 × 1 px dibujado, no un carácter metido en el
+     marcado que el lector de pantalla tendría que ignorar. */
+  .exp-bullets > li {
+    position: relative;
+    padding-inline-start: 1.25rem;
+  }
+  .exp-bullets > li + li {
+    margin-top: 0.5rem;
+  }
+  .exp-entry-current .exp-bullets > li + li {
+    margin-top: 0.75rem;
+  }
+  .exp-bullets > li::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0.72em;
+    inline-size: 0.5rem;
+    block-size: 1px;
+    background-color: var(--color-text-3);
+  }
+
+  /* Los puestos docentes no se repiten aquí: una línea y un ancla a `05`.
+     Cae en la misma retícula que las filas, con el índice de sección ocupando
+     el lugar del periodo. */
+  .exp-teaching {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1.5rem;
+  }
+  @media (min-width: 768px) {
+    .exp-teaching {
+      display: grid;
+      grid-template-columns: 8.75rem minmax(0, 1fr);
+      column-gap: 1.5rem;
+    }
+  }
+</style>

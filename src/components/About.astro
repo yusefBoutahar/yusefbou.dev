@@ -1,0 +1,50 @@
+---
+import type { Lang, SiteContent } from '../i18n/types';
+import { SECTION_IDS, SECTION_INDEX } from '../i18n/utils';
+import { revealDelay } from '../lib/format';
+
+interface Props {
+  lang: Lang;
+  about: SiteContent['about'];
+}
+
+const { about } = Astro.props;
+---
+
+<section class="section" id={SECTION_IDS.about} aria-labelledby="about-title">
+  <div class="shell">
+    <header class="section-head" data-reveal>
+      <p class="section-kicker">
+        <span><span data-num>{SECTION_INDEX.about}</span> · {about.title}</span>
+      </p>
+      <h2 class="section-title" id="about-title">{about.title}</h2>
+      <p class="section-lead">{about.lead}</p>
+    </header>
+
+    <div class="grid max-w-content gap-x-6 gap-y-12 xl:grid-cols-12">
+      <!-- 7 columnas. Prosa a 68ch: el reparto solo se abre a partir de 1280 px,
+           donde la columna de texto conserva su medida sin comerse el gutter. -->
+      <div class="measure space-y-6 xl:col-span-7" data-reveal>
+        {about.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+
+      <!-- 5 columnas. Pila de filas con filete superior, alineadas a la línea de
+           retícula: sin iconos y sin tarjetas, es decisión explícita del sistema
+           (DESIGN §6.2). El filete es lo único que separa un pilar del siguiente. -->
+      <ul class="measure xl:col-span-5">
+        {
+          about.pillars.map((pillar, index) => (
+            <li
+              class="border-t border-border pt-6 pb-8 last:pb-0"
+              data-reveal
+              data-reveal-delay={revealDelay(index)}
+            >
+              <h3 class="text-xl font-normal">{pillar.title}</h3>
+              <p class="mt-2 text-sm text-text-2">{pillar.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>

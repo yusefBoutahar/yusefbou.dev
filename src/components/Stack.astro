@@ -1,0 +1,138 @@
+---
+import type { Lang, SiteContent } from '../i18n/types';
+import { SECTION_IDS, SECTION_INDEX } from '../i18n/utils';
+import { revealDelay, splitVersion } from '../lib/format';
+
+interface Props {
+  lang: Lang;
+  stack: SiteContent['stack'];
+}
+
+const { stack } = Astro.props;
+
+const groups = stack.groups.map((group) => ({
+  name: group.name,
+  entries: group.items.map(splitVersion),
+}));
+---
+
+<section class="section" id={SECTION_IDS.stack} aria-labelledby="stack-title">
+  <div class="shell">
+    <header class="section-head" data-reveal>
+      <p class="section-kicker">
+        <span><span data-num>{SECTION_INDEX.stack}</span> · {stack.title}</span>
+      </p>
+      <h2 class="section-title" id="stack-title">{stack.title}</h2>
+      <p class="section-lead">{stack.lead}</p>
+    </header>
+
+    {/* Tabla de dominios: término (el dominio) y definición (sus tecnologías).
+        La lista de definición es la semántica exacta de lo que se está
+        maquetando y deja el esquema de encabezados de la página intacto. */}
+    <dl class="stack-table max-w-content">
+      {
+        groups.map((group, i) => (
+          <div
+            class="stack-group"
+            data-reveal
+            data-reveal-delay={revealDelay(i % 3)}
+          >
+            <dt class="stack-domain">{group.name}</dt>
+            <dd class="stack-items">
+              <ul class="chip-list" role="list">
+                {group.entries.map((entry) => (
+                  <li class="chip">{entry.name}{entry.version && <span class="chip-version">{entry.version}</span>}</li>
+                ))}
+              </ul>
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    {/* «Fuera de la lista, a propósito». Cierra la tabla con su propio filete:
+        es la última fila del inventario, no un pie de página. */}
+    <p class="stack-note" data-reveal>{stack.note}</p>
+  </div>
+</section>
+
+<style>
+  /* El filete separa los dominios; el aire va dentro de cada uno. */
+  .stack-table {
+    display: grid;
+  }
+
+  .stack-group {
+    border-top: 1px solid var(--color-border);
+    padding-block: 1.25rem;
+  }
+
+  .stack-domain {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--color-text);
+    text-wrap: balance;
+  }
+
+  .stack-items {
+    margin: 0.75rem 0 0;
+  }
+
+  /* Parte del inventario son frases, no nombres de producto
+     (`Cloudflare Pages con cabeceras y redirecciones declarativas`). El chip
+     canónico es `nowrap` para que `Python │ 3.12` no se parta nunca; aquí se
+     le permite envolver, que es lo único que evita el desplazamiento
+     horizontal a 320 px. El segmento de versión sigue siendo indivisible. */
+  .stack-items :global(.chip) {
+    max-width: 100%;
+    white-space: normal;
+  }
+  .stack-items :global(.chip-version) {
+    white-space: nowrap;
+  }
+
+  .stack-note {
+    border-top: 1px solid var(--color-border);
+    margin-top: 0;
+    padding-top: 1.5rem;
+    max-width: 60ch;
+    font-size: var(--text-sm);
+    color: var(--color-text-3);
+  }
+
+  /* ≥768: la fila del inventario. Dominio en columna fija a la izquierda,
+     tecnologías a la derecha — el mismo gesto que la columna de fechas de
+     Experiencia, para que las dos listas largas del documento se lean igual. */
+  @media (min-width: 48rem) {
+    .stack-group {
+      display: grid;
+      grid-template-columns: 11rem 1fr;
+      gap: 1.5rem;
+    }
+    .stack-items {
+      margin-top: 0;
+    }
+  }
+
+  /* ≥1024: tres columnas de dominios. Aquí la retícula manda sobre la fila:
+     una columna de 350 px no da para una etiqueta fija de 176, así que el
+     dominio vuelve encima de sus chips. */
+  @media (min-width: 64rem) {
+    .stack-table {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+    .stack-group {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+
+  @media print {
+    .stack-group {
+      break-inside: avoid;
+    }
+  }
+</style>

@@ -1,0 +1,32 @@
+{
+  "name": "Yousuf Boutahar El Maachi — Ingeniero Fullstack Senior",
+  "short_name": "Yousuf Boutahar",
+  "description": "Portfolio de Yousuf Boutahar El Maachi: ingeniería fullstack de Python y TypeScript, del backend al despliegue, con microservicios de IA en producción.",
+  "lang": "es-ES",
+  "dir": "ltr",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#0A0B0D",
+  "theme_color": "#0A0B0D",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "type": "image/x-icon",
+      "sizes": "32x32 16x16"
+    }
+  ]
+}

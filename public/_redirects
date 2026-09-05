@@ -1,0 +1,4 @@
+# Redirects para Cloudflare Pages
+
+# www → apex (301 permanente)
+https://www.yusefbou.dev/* https://yusefbou.dev/:splat 301

@@ -1,0 +1,298 @@
+---
+import type { Lang, SiteContent } from '../i18n/types';
+import { SECTION_IDS, cvPath, langCodes, localizePath, useUi } from '../i18n/utils';
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+interface Props {
+  lang: Lang;
+  nav: SiteContent['nav'];
+}
+
+const { lang, nav } = Astro.props;
+const ui = useUi(lang);
+
+// Cinco enlaces: docencia y formación se alcanzan desde Experiencia y desde la
+// cinta de índice, así la cabecera no se convierte en un sumario.
+const links = [
+  { href: `#${SECTION_IDS.about}`, label: nav.about },
+  { href: `#${SECTION_IDS.experience}`, label: nav.experience },
+  { href: `#${SECTION_IDS.work}`, label: nav.work },
+  { href: `#${SECTION_IDS.stack}`, label: nav.stack },
+  { href: `#${SECTION_IDS.contact}`, label: nav.contact },
+];
+
+/* ---------------------------------------------------------------------------
+   CONMUTADOR DE TEMA — un solo botón que cicla tres estados.
+
+   Antes vivía en el pie como grupo de tres radios con las etiquetas escritas.
+   Aquí es un botón con icono, y eso obliga a devolver por otras vías las dos
+   cosas que el texto daba gratis:
+     · qué estado está activo  -> lo dice el `aria-label`, que empieza por
+       «Tema: Sistema» y se reescribe en cada pulsación;
+     · qué va a pasar al pulsar -> segunda mitad del mismo `aria-label`
+       («Cambiar a claro»), porque un icono de sol no promete nada por sí solo;
+     · que ALGO ha cambiado     -> región `aria-live="polite"` solo para
+       lectores, que se rellena únicamente tras una pulsación del usuario.
+
+   Los tres estados se conservan: quitar «Sistema» obligaría a elegir tema a
+   quien ya lo tiene elegido en su sistema operativo.
+   -------------------------------------------------------------------------- */
+
+const THEME_CYCLE = ['system', 'light', 'dark'] as const;
+type ThemeChoice = (typeof THEME_CYCLE)[number];
+
+const themeName = {
+  system: ui.themeSystem,
+  light: ui.themeLight,
+  dark: ui.themeDark,
+} as const satisfies Record<ThemeChoice, string>;
+
+// El icono es el ESTADO ACTUAL, no la acción: es lo que espera quien ya ha
+// usado otro conmutador de tema, y lo que permite leer el estado de un vistazo.
+const themeIcon = {
+  system: 'monitor',
+  light: 'sun',
+  dark: 'moon',
+} as const satisfies Record<ThemeChoice, IconName>;
+
+// Único conector que no sale de `useUi`: el diccionario tiene los nombres de
+// los tres temas, no el verbo que los une. Se compone aquí para no tocar el
+// contrato de contenido, y se traduce igual que todo lo demás.
+const switchVerb = { es: 'Cambiar a', en: 'Switch to' } as const satisfies Record<Lang, string>;
+
+// Un par de cadenas por estado. Viajan en `data-*` para que el script del
+// cliente no lleve ni una palabra traducible dentro.
+const themeCopy = Object.fromEntries(
+  THEME_CYCLE.flatMap((choice, i) => {
+    const next = THEME_CYCLE[(i + 1) % THEME_CYCLE.length];
+    return [
+      [`data-aria-${choice}`, `${ui.themeLabel}: ${themeName[choice]}. ${switchVerb[lang]} ${themeName[next].toLowerCase()}`],
+      [`data-live-${choice}`, `${ui.themeLabel}: ${themeName[choice]}`],
+    ];
+  }),
+) as Record<string, string>;
+---
+
+<header class="site-header" data-site-header>
+  <div class="shell header-bar">
+    <a class="header-brand" href={localizePath(lang, '/')}>yusefbou.dev</a>
+
+    <nav class="header-nav" aria-label={nav.menuLabel}>
+      {links.map((link) => <a class="nav-link" href={link.href}>{link.label}</a>)}
+    </nav>
+
+    <div class="header-actions">
+      {/* Por debajo de 900 px solo queda Contacto; no hay menú a pantalla completa. */}
+      <a class="nav-link header-contact" href={`#${SECTION_IDS.contact}`}>{nav.contact}</a>
+
+      {/* Dos enlaces reales al enrutado nativo de Astro. Cero JavaScript.
+           Siguen en TEXTO a propósito: `ES · EN` dice a la vez el idioma en el
+           que estás y el que te espera al pulsar. Un globo terráqueo no dice
+           ninguna de las dos cosas y encima obliga a un `aria-label` para
+           recuperar lo que el texto ya daba. */}
+      <p class="lang-switch">
+        {
+          langCodes.map((code, i) => (
+            <>
+              {i > 0 && <span class="lang-sep" aria-hidden="true">·</span>}
+              <a
+                href={localizePath(code, '/')}
+                hreflang={code}
+                lang={code}
+                aria-label={code === lang ? undefined : nav.switchLangAria}
+                aria-current={code === lang ? 'page' : undefined}
+              >
+                {code.toUpperCase()}
+              </a>
+            </>
+          ))
+        }
+      </p>
+
+      {/* El nombre accesible de salida es el de «sistema», que es el estado de
+          quien llega sin preferencia guardada; el script lo corrige al leer
+          localStorage, igual que hacía el grupo de radios del pie. */}
+      <button
+        type="button"
+        class="btn btn-ghost theme-toggle"
+        data-theme-toggle
+        aria-label={themeCopy['data-aria-system']}
+        {...themeCopy}
+      >
+        {
+          THEME_CYCLE.map((choice) => (
+            <span class="theme-ico" data-theme-icon={choice}>
+              <Icon name={themeIcon[choice]} />
+            </span>
+          ))
+        }
+      </button>
+
+      {/* Solo para lectores de pantalla y solo tras una pulsación. */}
+      <span class="theme-live" role="status" aria-live="polite" data-theme-live></span>
+
+      <a class="btn btn-ghost header-cv" href={cvPath(lang)} download>
+        {nav.cv}<Icon name="download" size={16} />
+      </a>
+    </div>
+  </div>
+</header>
+
+<style>
+  /* El enlace de contacto de la barra estrecha desaparece cuando aparece la
+     navegación central, en el umbral propio del sistema (900 px). */
+  @media (min-width: 900px) {
+    .header-contact {
+      display: none;
+    }
+  }
+
+  /* Botón cuadrado de 44 px: objetivo táctil completo dentro de los 56 px de
+     cabecera, y ancho FIJO, así el icono puede cambiar sin mover ni un píxel
+     de la fila (CLS 0 al conmutar). */
+  .theme-toggle {
+    inline-size: 2.75rem;
+    padding-inline: 0;
+  }
+
+  /* Qué icono se ve lo decide el atributo que el script en línea del Layout ya
+     pone en <html> ANTES de pintar. Sin `data-theme` = «sistema». Así el icono
+     correcto sale en el primer fotograma, sin destello y sin que el JavaScript
+     de este componente tenga que dibujar nada. */
+  .theme-ico {
+    display: none;
+  }
+  :global(html:not([data-theme])) .theme-ico[data-theme-icon='system'],
+  :global(html[data-theme='light']) .theme-ico[data-theme-icon='light'],
+  :global(html[data-theme='dark']) .theme-ico[data-theme-icon='dark'] {
+    display: inline-flex;
+  }
+
+  /* SIN JAVASCRIPT el botón no puede hacer nada, así que no se dibuja: un
+     control muerto en la cabecera es peor que su ausencia, y no se pierde
+     función —sin JS manda `prefers-color-scheme`, que es exactamente el estado
+     «Sistema»—. Se hace con `scripting: none`, que resuelve el navegador antes
+     del primer pintado: nada de ocultar con JS después, que sería un salto de
+     maqueta. Un navegador sin soporte de la consulta deja el botón visible,
+     pero ese navegador tampoco tiene JavaScript desactivado. */
+  @media (scripting: none) {
+    .theme-toggle,
+    .theme-live {
+      display: none;
+    }
+  }
+
+  /* Región de anuncio: fuera de la vista, nunca fuera del árbol. `display:none`
+     o `visibility:hidden` la sacarían del árbol de accesibilidad y no anunciaría
+     nada; se saca de flujo para que no toque la maqueta de la cabecera. */
+  .theme-live {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* El conmutador es una pieza MÁS en una fila que ya iba justa: medido, a
+     320 px sobraban 0 px antes de añadirlo. Por debajo de 420 px se aprieta el
+     grupo de la derecha —aquí, no en global.css, que lo comparte todo el
+     sitio—. El botón baja a 36 × 44: sigue muy por encima del mínimo de 24 px
+     de WCAG 2.5.8 y conserva los 44 px de alto. */
+  @media (max-width: 420px) {
+    .header-cv {
+      padding-inline: 0.375rem;
+    }
+    .theme-toggle {
+      inline-size: 2.25rem;
+    }
+  }
+
+  /* Por debajo de 360 px no caben cinco piezas ni apretando, y algo tiene que
+     ceder: cede `Contacto`, que es un ancla a una sección de ESTA página —el
+     hero ya ofrece «Hablemos» y la sección está a un scroll—, y no el CV, ni
+     el idioma, ni el tema, que no tienen sustituto en la página. Por encima de
+     360 px la cabecera sigue siendo la del sistema: Contacto + CV. */
+  @media (max-width: 359px) {
+    .header-contact {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // El filete inferior aparece tras 16 px de desplazamiento: el hero arranca
+  // sin caja. Un solo oyente pasivo, sin cálculo de disposición.
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+  if (header) {
+    const sync = () => header.classList.toggle('is-scrolled', window.scrollY > 16);
+    sync();
+    window.addEventListener('scroll', sync, { passive: true });
+  }
+
+  // --- Conmutador de tema -------------------------------------------------
+  // Ciclo de tres estados: sistema -> claro -> oscuro -> sistema. «Sistema»
+  // BORRA el atributo y devuelve el mando a `prefers-color-scheme`; los tokens
+  // se recalculan solos con `light-dark()`.
+  //
+  // Este script NO decide el tema inicial: eso ya lo hace el script en línea
+  // del Layout antes de pintar. Aquí solo se lee el mismo `localStorage` para
+  // saber en qué punto del ciclo estamos y poner el nombre accesible correcto.
+  type ThemeChoice = 'system' | 'light' | 'dark';
+  const CYCLE: ThemeChoice[] = ['system', 'light', 'dark'];
+
+  const root = document.documentElement;
+  const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const live = document.querySelector<HTMLElement>('[data-theme-live]');
+
+  if (toggle) {
+    // Toda la microcopia viene del servidor, ya traducida.
+    const ARIA: Record<ThemeChoice, string> = {
+      system: toggle.dataset.ariaSystem ?? '',
+      light: toggle.dataset.ariaLight ?? '',
+      dark: toggle.dataset.ariaDark ?? '',
+    };
+    const LIVE: Record<ThemeChoice, string> = {
+      system: toggle.dataset.liveSystem ?? '',
+      light: toggle.dataset.liveLight ?? '',
+      dark: toggle.dataset.liveDark ?? '',
+    };
+
+    const read = (): ThemeChoice => {
+      // La fuente de verdad es el atributo que ya está en <html>; localStorage
+      // solo se consulta si el atributo no está, para distinguir «sistema».
+      const painted = root.dataset.theme;
+      if (painted === 'light' || painted === 'dark') return painted;
+      return 'system';
+    };
+
+    const apply = (choice: ThemeChoice, announce: boolean) => {
+      // Sin transición durante el cambio: se percibiría como retraso.
+      root.classList.add('theming');
+      if (choice === 'system') delete root.dataset.theme;
+      else root.dataset.theme = choice;
+      try {
+        if (choice === 'system') localStorage.removeItem('theme');
+        else localStorage.setItem('theme', choice);
+      } catch {}
+      // El icono lo cambia el CSS al ver el atributo de <html>; aquí solo se
+      // renueva el nombre accesible, que es lo que el CSS no puede tocar.
+      toggle.setAttribute('aria-label', ARIA[choice]);
+      // Solo se anuncia lo que ha pedido el usuario: llenar la región al
+      // cargar dispararía un aviso que nadie ha provocado.
+      if (announce && live) live.textContent = LIVE[choice];
+      requestAnimationFrame(() => root.classList.remove('theming'));
+    };
+
+    apply(read(), false);
+
+    toggle.addEventListener('click', () => {
+      const next = CYCLE[(CYCLE.indexOf(read()) + 1) % CYCLE.length]!;
+      apply(next, true);
+    });
+  }
+</script>

@@ -1,0 +1,91 @@
+---
+import type { Lang, SiteContent } from '../i18n/types';
+import { SECTION_IDS, SECTION_INDEX } from '../i18n/utils';
+import { revealDelay } from '../lib/format';
+import Videos from './Videos.astro';
+
+interface Props {
+  lang: Lang;
+  teaching: SiteContent['teaching'];
+}
+
+const { lang, teaching } = Astro.props;
+
+/**
+ * La mono es la voz del dato y DESIGN §3.2 le pone un techo de tres palabras.
+ * Cuatro de los cinco periodos son rangos de fecha; uno es prosa («Durante la
+ * etapa en Talentus» / «During my time at Talentus»). Ese se compone en Inter:
+ * en mono rompería el techo y, peor, se leería como un dato verificable.
+ */
+function isDatePeriod(period: string): boolean {
+  const words = period.split(/[^\p{L}]+/u).filter(Boolean);
+  return /\d{4}/.test(period) && words.length <= 3;
+}
+---
+
+<section
+  class="section section-surface"
+  id={SECTION_IDS.teaching}
+  aria-labelledby="teaching-title"
+>
+  <div class="shell">
+    <!-- Cabecera y contenido comparten max-w-narrow: el cintillo cae en la
+         misma vertical que las filas de la lista. Pero ALINEADOS A LA
+         IZQUIERDA del shell, no centrados: DESIGN §6.6 pedía centrar y a
+         1440 eso dejaba 312 px muertos a la izquierda y rompía la vertical
+         que comparten las otras cinco secciones. La coherencia vertical de la
+         página manda sobre el centrado; la medida de lectura se conserva
+         entera porque el ancho no cambia, solo el eje. -->
+    <header class="section-head max-w-narrow" data-reveal>
+      <p class="section-kicker">
+        <span><span data-num>{SECTION_INDEX.teaching}</span> · {teaching.title}</span>
+      </p>
+      <h2 class="section-title" id="teaching-title">{teaching.title}</h2>
+      <p class="section-lead">{teaching.lead}</p>
+    </header>
+
+    <div class="max-w-narrow">
+      <div class="space-y-6" data-reveal>
+        {teaching.paragraphs.map((paragraph) => (
+          <p class="text-lg text-text-2">{paragraph}</p>
+        ))}
+      </div>
+
+      {/*
+        Lista de definición, no tarjetas: el periodo es el término y el puesto su
+        definición. Sin encabezados a propósito — la docencia se lee como registro
+        subordinado a Experiencia, no como una segunda sección de puestos.
+      */}
+      <dl class="mt-16">
+        {teaching.items.map((item, index) => (
+          <div
+            class="grid gap-y-2 border-t border-border py-6 md:grid-cols-[140px_minmax(0,1fr)] md:gap-x-6"
+            data-reveal
+            data-reveal-delay={revealDelay(index)}
+          >
+            {/* `pt-1` corrige ópticamente el desfase de línea base entre el
+                periodo (13 px) y el cargo (17 px) cuando van en columnas. */}
+            {isDatePeriod(item.period) ? (
+              <dt class="font-mono text-xs text-text-3 md:pt-1" data-num>{item.period}</dt>
+            ) : (
+              <dt class="text-sm text-text-3 md:pt-1">{item.period}</dt>
+            )}
+
+            <dd>
+              <p class="text-base font-medium text-text">{item.role}</p>
+              <p class="mt-1 text-sm text-text-2">{item.org}</p>
+              <p class="mt-3 text-sm text-text-3">{item.description}</p>
+
+              {/* Ciberlandia es la única línea de esta lista con prueba en
+                  vídeo, y el vídeo va justo debajo de la afirmación que
+                  demuestra. Sin miniatura, la fila sigue leyéndose igual. */}
+              {item.videos && item.videos.length > 0 && (
+                <Videos lang={lang} videos={item.videos} />
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </div>
+</section>

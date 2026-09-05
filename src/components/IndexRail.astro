@@ -1,0 +1,82 @@
+---
+import { SECTION_IDS, SECTION_INDEX } from '../i18n/utils';
+
+export interface RailItem {
+  /** Ancla de la sección, sin almohadilla. */
+  id: string;
+  /** Número visible: `01` … `07`. */
+  index: string;
+}
+
+interface Props {
+  sections?: readonly RailItem[];
+}
+
+// El hero no lleva número, así que no aparece en la cinta.
+const defaultSections: readonly RailItem[] = [
+  { id: SECTION_IDS.about, index: SECTION_INDEX.about },
+  { id: SECTION_IDS.experience, index: SECTION_INDEX.experience },
+  { id: SECTION_IDS.work, index: SECTION_INDEX.work },
+  { id: SECTION_IDS.stack, index: SECTION_INDEX.stack },
+  { id: SECTION_IDS.teaching, index: SECTION_INDEX.teaching },
+  { id: SECTION_IDS.education, index: SECTION_INDEX.education },
+  { id: SECTION_IDS.contact, index: SECTION_INDEX.contact },
+];
+
+const { sections = defaultSections } = Astro.props;
+---
+
+<!-- Mapa del documento en el margen que si no queda muerto. Solo >= 1280 px.
+     `aria-hidden`: es exactamente redundante con la navegación de cabecera. -->
+<div class="index-rail" aria-hidden="true" data-index-rail>
+  <ol>
+    {
+      sections.map((section) => (
+        <li data-rail-item={section.id} data-active="false">
+          <span class="rail-tick" />
+          <span data-num>{section.index}</span>
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<script>
+  // Sin JS la cinta se queda inerte y gris: no informa de nada que no esté ya
+  // en la navegación, así que degradar a nada es correcto.
+  const rail = document.querySelector<HTMLElement>('[data-index-rail]');
+
+  if (rail && 'IntersectionObserver' in window) {
+    const items = new Map<string, HTMLElement>();
+    for (const item of rail.querySelectorAll<HTMLElement>('[data-rail-item]')) {
+      const id = item.dataset.railItem;
+      if (id) items.set(id, item);
+    }
+
+    const targets = [...items.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    const visible = new Set<string>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        }
+        // Manda la primera sección visible en orden de documento: la cinta es
+        // un indicador de progreso, no una carrera entre secciones.
+        let marked = false;
+        for (const [id, item] of items) {
+          const active = !marked && visible.has(id);
+          if (active) marked = true;
+          item.dataset.active = String(active);
+        }
+      },
+      { rootMargin: '-45% 0px -45% 0px', threshold: 0 },
+    );
+
+    for (const target of targets) observer.observe(target);
+  }
+</script>
