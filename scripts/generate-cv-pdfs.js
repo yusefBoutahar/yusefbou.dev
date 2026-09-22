@@ -57,7 +57,7 @@ async function convertHTMLToPDF(htmlFile, pdfFile) {
 // Main execution
 async function main() {
   const htmlDir = path.join('scripts', 'cv', '.build');
-  const pdfDir = path.join('scripts', 'cv', '.build');
+  const pdfDir = path.join('public');
   
   // Check if HTML files exist
   const englishHtml = path.join(htmlDir, 'cv-en.html');
@@ -85,7 +85,7 @@ async function main() {
   
   console.log('');
   console.log('PDF generation process completed successfully!');
-  console.log('Both PDF files have been updated in the scripts/cv/.build/ directory.');
+  console.log('Both PDF files have been updated in the public/ directory.');
 }
 
 // Run the script

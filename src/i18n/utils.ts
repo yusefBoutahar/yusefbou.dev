@@ -84,8 +84,8 @@ export type SectionId = (typeof SECTION_IDS)[keyof typeof SECTION_IDS];
  * una ruta, no texto traducible, así que vive aquí y no en el diccionario.
  */
 const CV_PATH = {
-  es: '/scripts/cv/.build/cv-es.pdf',
-  en: '/scripts/cv/.build/cv-en.pdf',
+  es: '/cv-es.pdf',
+  en: '/cv-en.pdf',
 } as const satisfies Record<Lang, string>;
 
 export function cvPath(lang: Lang): string {
