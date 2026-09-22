@@ -623,14 +623,6 @@
   }
   .portrait-plate img { filter: saturate(0.94) contrast(1.02); }
 
-  /* Cargo · empresa. Por debajo del umbral de una sola columna la línea no
-     cabe entera y el renglón siguiente empezaría por el punto medio, que se
-     lee como una viñeta. Se apila y se quita el separador. */
-  @media (max-width: 767px) {
-    .hero-role-org { display: block; }
-    .hero-role-sep { display: none; }
-  }
-
   /* --- Cabecera persistente --------------------------------------------- */
 
   /* El filete inferior NO existe hasta que hay 16 px de scroll (.is-scrolled):

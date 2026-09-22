@@ -29,17 +29,11 @@ const { hero, githubLabel, linkedinLabel, portrait } = Astro.props;
       </div>
 
       <div class="mt-6" data-reveal data-reveal-delay="90">
-        <!-- El separador viaja con la empresa, así no se queda un punto medio
-             colgando al final del renglón. Y por debajo de 768 px —el umbral
-             de una sola columna del sistema, donde la línea no cabe entera—
-             la empresa baja a su propio renglón y el punto desaparece: un
-             renglón que EMPIEZA por «·» se lee como una viñeta suelta. -->
-        <p class="hero-role text-lg text-text-2">
-          <span class="font-medium text-text">{hero.role}</span>
-          <span class="hero-role-org whitespace-nowrap"
-            ><span class="hero-role-sep text-text-3" aria-hidden="true">·</span> {SITE.employer}</span
-          >
-        </p>
+        <!-- Solo el titular, que describe a la persona y no caduca. La empresa
+             NO se nombra aquí: el hero habla en presente, y nombrarla afirmaría
+             un empleo en curso. Los puestos viven en Experiencia, que es donde
+             cada uno lleva sus fechas. -->
+        <p class="text-lg font-medium text-text">{hero.role}</p>
         <!-- 62ch es el tope de la frase de posicionamiento en §6.1. -->
         <p class="mt-4 text-base text-text-2 max-w-[62ch]">{hero.intro}</p>
       </div>

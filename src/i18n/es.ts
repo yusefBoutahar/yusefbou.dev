@@ -91,7 +91,7 @@ export const es: SiteContent = {
       {
         role: 'Senior Product & Experience Engineer',
         company: 'SABAU STRAPPING',
-        period: 'ene. 2026 — Actualidad',
+        period: 'ene. 2026 — sept. 2026',
         location: 'Canarias, en remoto',
         summary:
           'Propiedad completa de servicios de producto y de IA, del modelo de datos al despliegue en Kubernetes, más el frontend de la plataforma. Ese es el título formal del puesto; el trabajo es fullstack de extremo a extremo, y así es como me presento.',
@@ -116,7 +116,6 @@ export const es: SiteContent = {
           'Helm 3',
           'Docker',
         ],
-        current: true,
       },
       {
         role: 'Desarrollador fullstack, con liderazgo técnico del frontend',
