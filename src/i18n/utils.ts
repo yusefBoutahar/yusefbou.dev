@@ -79,19 +79,6 @@ export const SECTION_IDS = {
 
 export type SectionId = (typeof SECTION_IDS)[keyof typeof SECTION_IDS];
 
-/**
- * Currículum en PDF, uno por idioma: los dos ficheros están en `public/`. Es
- * una ruta, no texto traducible, así que vive aquí y no en el diccionario.
- */
-const CV_PATH = {
-  es: '/cv-yousuf-boutahar.pdf',
-  en: '/cv-yousuf-boutahar-en.pdf',
-} as const satisfies Record<Lang, string>;
-
-export function cvPath(lang: Lang): string {
-  return CV_PATH[lang];
-}
-
 /** Numeración visible de las secciones. El hero no lleva número. */
 export const SECTION_INDEX = {
   about: '01',

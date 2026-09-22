@@ -671,7 +671,7 @@
   .header-brand:hover,
   .header-brand:focus-visible { background-color: var(--color-accent-hi); }
 
-  /* Navegación central: solo desde 900 px. Por debajo, Contacto + CV. */
+  /* Navegación central: solo desde 900 px. Por debajo, Contacto. */
   .header-nav { display: none; }
   @media (min-width: 900px) {
     .header-nav {

@@ -109,7 +109,6 @@ export interface SiteContent {
     stack: string;
     teaching: string;
     contact: string;
-    cv: string;
     /** Texto del conmutador hacia el otro idioma. */
     switchLang: string;
     switchLangAria: string;
@@ -179,7 +178,6 @@ export interface SiteContent {
     githubLabel: string;
     /** Nombre visible del enlace al canal; la URL vive en `SITE.youtube`. */
     youtubeLabel: string;
-    cvLabel: string;
     note: string;
   };
   footer: {

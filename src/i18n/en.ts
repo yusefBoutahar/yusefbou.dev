@@ -31,7 +31,6 @@ export const en: SiteContent = {
     stack: 'Stack',
     teaching: 'Teaching',
     contact: 'Contact',
-    cv: 'CV',
     switchLang: 'ES',
     switchLangAria: 'ES: view this page in Spanish',
     skipToContent: 'Skip to main content',
@@ -655,7 +654,6 @@ export const en: SiteContent = {
     linkedinLabel: 'LinkedIn',
     githubLabel: 'GitHub',
     youtubeLabel: 'YouTube',
-    cvLabel: 'Download CV (PDF)',
     note: 'I reply to anything that comes with a bit of context: what you are building, on what stack, and what you expect from the person. Native Spanish, fluent professional English in technical settings.',
   },
 

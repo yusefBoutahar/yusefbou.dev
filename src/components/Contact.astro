@@ -1,11 +1,10 @@
 ---
-import type { Lang, SiteContent } from '../i18n/types';
-import { SECTION_IDS, SECTION_INDEX, SITE, cvPath } from '../i18n/utils';
+import type { SiteContent } from '../i18n/types';
+import { SECTION_IDS, SECTION_INDEX, SITE } from '../i18n/utils';
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
 
 interface Props {
-  lang: Lang;
   contact: SiteContent['contact'];
   /** Microcopia del botón de copiar; sale de `useUi(lang)`, no del componente. */
   copyLabel: string;
@@ -13,15 +12,15 @@ interface Props {
   copyAriaLabel: string;
 }
 
-const { lang, contact, copyLabel, copiedLabel, copyAriaLabel } = Astro.props;
+const { contact, copyLabel, copiedLabel, copyAriaLabel } = Astro.props;
 
 // El correo se escribe una vez y se reutiliza en el enlace grande, en el botón
-// secundario y en el atributo que lee el script de copiado.
+// de acción y en el atributo que lee el script de copiado.
 const mailto = `mailto:${contact.email}`;
 
-// Cinco destinos en una sola fila, con el mismo reparto de jerarquía que el
-// hero (§6.1): un primario, un secundario y tres enlaces mono de marca. El CV
-// es el primario porque es la acción que un reclutador hace de verdad.
+// Cuatro destinos en una sola fila, con el mismo reparto de jerarquía que el
+// hero (§6.1): un primario y tres enlaces mono de marca. El correo es el
+// primario porque es la acción que un reclutador hace de verdad.
 // El canal de YouTube entra el último: es prueba, no credencial de contacto.
 const profiles: { href: string; label: string; icon: IconName }[] = [
   { href: SITE.linkedin, label: contact.linkedinLabel, icon: 'linkedin' },
@@ -81,17 +80,14 @@ const profiles: { href: string; label: string; icon: IconName }[] = [
         </span>
       </div>
 
-      {/* Misma estructura que la fila del hero, clase por clase: las dos
-          acciones en un grupo y los perfiles en otro. Con cinco destinos en
-          una sola lista, el tercer enlace se quedaba colgando al final del
-          primer renglón y los otros dos bajaban solos; agrupados, lo que se
-          parte es la fila entera y quedan dos bloques legibles. */}
+      {/* Misma estructura que la fila del hero, clase por clase: la acción en
+          un grupo y los perfiles en otro. Con todo en una sola lista, lo que
+          se parte al envolver es un enlace suelto; agrupados, se parte la fila
+          entera y quedan dos bloques legibles. El correo es la ÚNICA acción de
+          la sección, así que va en primario. */}
       <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4" data-reveal data-reveal-delay="45">
         <div class="flex flex-wrap gap-3">
-          <a class="btn btn-primary" href={cvPath(lang)} download>
-            {contact.cvLabel}<Icon name="download" size={16} />
-          </a>
-          <a class="btn btn-secondary" href={mailto}>
+          <a class="btn btn-primary" href={mailto}>
             {contact.emailLabel}<Icon name="mail" size={16} />
           </a>
         </div>

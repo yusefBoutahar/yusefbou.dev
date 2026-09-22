@@ -1,6 +1,6 @@
 ---
 import type { Lang, SiteContent } from '../i18n/types';
-import { SECTION_IDS, cvPath, langCodes, localizePath, useUi } from '../i18n/utils';
+import { SECTION_IDS, langCodes, localizePath, useUi } from '../i18n/utils';
 import Icon from './Icon.astro';
 import type { IconName } from './icons';
 
@@ -136,10 +136,6 @@ const themeCopy = Object.fromEntries(
 
       {/* Solo para lectores de pantalla y solo tras una pulsación. */}
       <span class="theme-live" role="status" aria-live="polite" data-theme-live></span>
-
-      <a class="btn btn-ghost header-cv" href={cvPath(lang)} download>
-        {nav.cv}<Icon name="download" size={16} />
-      </a>
     </div>
   </div>
 </header>
@@ -217,25 +213,22 @@ const themeCopy = Object.fromEntries(
     white-space: nowrap;
   }
 
-  /* El conmutador es una pieza MÁS en una fila que ya iba justa: medido, a
-     320 px sobraban 0 px antes de añadirlo. Por debajo de 420 px se aprieta el
-     grupo de la derecha —aquí, no en global.css, que lo comparte todo el
-     sitio—. El botón baja a 36 × 44: sigue muy por encima del mínimo de 24 px
-     de WCAG 2.5.8 y conserva los 44 px de alto. */
+  /* El conmutador es una pieza MÁS en una fila que ya iba justa. Por debajo
+     de 420 px se aprieta —aquí, no en global.css, que lo comparte todo el
+     sitio—: baja a 36 × 44, muy por encima del mínimo de 24 px de WCAG 2.5.8 y
+     conservando los 44 px de alto. */
   @media (max-width: 420px) {
-    .header-cv {
-      padding-inline: 0.375rem;
-    }
     .theme-toggle {
       inline-size: 2.25rem;
     }
   }
 
-  /* Por debajo de 360 px no caben cinco piezas ni apretando, y algo tiene que
-     ceder: cede `Contacto`, que es un ancla a una sección de ESTA página —el
-     hero ya ofrece «Hablemos» y la sección está a un scroll—, y no el CV, ni
-     el idioma, ni el tema, que no tienen sustituto en la página. Por encima de
-     360 px la cabecera sigue siendo la del sistema: Contacto + CV. */
+  /* Por debajo de 360 px la fila de la derecha no cabe junto al logo, y algo
+     tiene que ceder: cede `Contacto`, que es un ancla a una sección de ESTA
+     página —el hero ya ofrece «Hablemos» y la sección está a un scroll—, y no
+     el idioma ni el tema, que no tienen sustituto en la página. Medido a
+     320 px con `Contacto` visible: el grupo se mete 15 px dentro del canalón
+     de 20 px. A 340 px ya encaja, pero con holgura cero. */
   @media (max-width: 359px) {
     .header-contact {
       display: none;
