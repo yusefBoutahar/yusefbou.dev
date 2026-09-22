@@ -50,19 +50,20 @@ const OG_IMAGE = {
 const ogImage = absoluteUrl(OG_IMAGE[lang]);
 
 /**
- * Cargo FORMAL del puesto actual, tal y como lo declara la sección de
- * Experiencia y lo confirma LinkedIn. Sale del diccionario, del único empleo
- * marcado como `current`, para que no pueda desincronizarse de la ficha.
+ * Cargo FORMAL del último puesto, tal y como lo declara la sección de
+ * Experiencia y lo confirma LinkedIn. Sale del diccionario —de la primera
+ * ficha, que es la más reciente— para que no pueda desincronizarse de ella.
+ * Antes salía del empleo marcado como `current`; ya no hay ninguno, y el cargo
+ * no puede depender de que lo haya.
  *
- * En `schema.org`, `jobTitle` junto a `worksFor` afirma «este es mi cargo en
- * esta empresa», y es un dato legible por máquina que los agregadores indexan.
- * Por eso NO puede llevar el titular con el que se presenta —«Ingeniero
- * Fullstack Senior»—: eso atribuiría al empleador un puesto que no le consta.
- * El titular es suyo, no de la empresa, y viaja en `description` y en
- * `disambiguatingDescription`, donde describe a la persona sin afirmar cargo.
+ * Va SOLO, sin `worksFor`: `jobTitle` junto a `worksFor` afirmaría «este es mi
+ * cargo en esta empresa», un hecho en presente que el sitio ya no sostiene.
+ * Suelto describe a la persona, que es lo que aquí se quiere decir. Aun así NO
+ * puede llevar el titular con el que se presenta —«Ingeniero Fullstack
+ * Senior»—: ese es el suyo, no un cargo, y viaja en `description` y en
+ * `disambiguatingDescription`, donde describe sin afirmar puesto.
  */
-const formalJobTitle =
-  t.experience.jobs.find((job) => job.current)?.role ?? 'Senior Product & Experience Engineer';
+const formalJobTitle = t.experience.jobs[0]?.role ?? 'Senior Product & Experience Engineer';
 
 /** Datos estructurados. Solo hechos que ya están en el diccionario. */
 const person = {
@@ -105,10 +106,6 @@ const person = {
     '@type': 'CollegeOrUniversity',
     name: SITE.university,
     sameAs: 'https://www.ulpgc.es/',
-  },
-  worksFor: {
-    '@type': 'Organization',
-    name: SITE.employer,
   },
   address: {
     '@type': 'PostalAddress',

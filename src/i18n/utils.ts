@@ -49,7 +49,6 @@ export const SITE = {
   locality: 'Las Palmas de Gran Canaria',
   region: 'Las Palmas',
   country: 'ES',
-  employer: 'SABAU STRAPPING',
   university: 'Universidad de Las Palmas de Gran Canaria',
 } as const;
 

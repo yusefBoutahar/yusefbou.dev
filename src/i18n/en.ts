@@ -94,7 +94,7 @@ export const en: SiteContent = {
       {
         role: 'Senior Product & Experience Engineer',
         company: 'SABAU STRAPPING',
-        period: 'Jan 2026 – Present',
+        period: 'Jan 2026 – Sep 2026',
         location: 'Canary Islands, remote',
         summary:
           'I own product and AI services end to end, from the data model through to deployment on Kubernetes, plus the platform frontend. That is the formal job title; the work itself is full-stack, end to end, and that is how I introduce myself.',
@@ -119,7 +119,6 @@ export const en: SiteContent = {
           'Helm 3',
           'Docker',
         ],
-        current: true,
       },
       {
         role: 'Full-Stack Developer, with technical leadership of the frontend',
